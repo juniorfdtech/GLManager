@@ -1,6 +1,7 @@
 import typing as t
-from .shellscript import exec_command
 
+from datetime import datetime, timedelta
+from .shellscript import exec_command
 
 def load_all_users() -> t.List[str]:
     path = '/etc/passwd'
@@ -32,3 +33,6 @@ def get_pids_ssh(user: str) -> t.List[int]:
         for line in output.split('\n')[1:]
         if line and line.split()[-1] == 'sshd'
     ]
+
+def days_to_date(days: int) -> str:
+    return (datetime.now() + timedelta(days=days)).strftime('%d/%m/%Y')

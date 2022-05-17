@@ -70,6 +70,11 @@ class Console:
     def clear_screen():
         os.system('clear' if os.name == 'posix' else 'cls')
 
+    @staticmethod
+    def pause(message: str = 'Enter para continuar'):
+        print(COLOR_NAME.GREEN + message + COLOR_NAME.RESET, end='')
+        input()
+
 
 class ConsoleUser(Console):
     def __init__(self, title):
@@ -104,10 +109,16 @@ class ConsoleUser(Console):
     def run(self, item, items):
         if not self.item_returned is None:
             self.item_returned = None
+        
         self.selected_exit = False
+        
         if not self.items:
             self.create_items(item, items)
+        
         self.show()
+
+    
+
 
 
 class Item:

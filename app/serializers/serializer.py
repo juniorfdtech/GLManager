@@ -13,10 +13,6 @@ def _parser_to_dict(obj: Any) -> Any:
         return {k: _parser_to_dict(v) for k, v in obj.items()}
     elif isinstance(obj, list):
         return [_parser_to_dict(v) for v in obj]
-    elif isinstance(obj, datetime.datetime):
-        return obj.utcnow()
-    elif isinstance(obj, enum.Enum):
-        return obj.value
     elif isinstance(obj, Serializer):
         return obj.to_dict()
     else:
@@ -27,6 +23,17 @@ def _parser_to_json(obj: Any) -> Any:
     '''
     Converts object to JSON.
     '''
+    if isinstance(obj, dict):
+        return {k: _parser_to_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_parser_to_json(v) for v in obj]
+    elif isinstance(obj, Serializer):
+        return obj.to_json()
+    elif isinstance(obj, datetime.datetime):
+        return obj.strftime('%Y-%m-%d %H:%M:%S')
+    elif isinstance(obj, enum.Enum):
+        return obj.value
+        
     return JSONEncoder(indent=4).encode(_parser_to_dict(obj))
 
 

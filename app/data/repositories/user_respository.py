@@ -1,14 +1,15 @@
-from app.config import DBConnection
-from app.models import User
-from app.dtos import UserDto
+from app.data.config import DBConnection
+from app.domain.entites import User
+
 
 class UserRepository:
     @staticmethod
-    def create(user_dto: UserDto) -> User:
+    def create(user: User) -> User:
         with DBConnection() as db:
-            user = User(**user_dto.to_dict())
             db.session.add(user)
             db.session.commit()
+
+        return user
 
     @staticmethod
     def get_by_id(id: int) -> User:
@@ -26,19 +27,20 @@ class UserRepository:
             return db.session.query(User).all()
 
     @staticmethod
-    def update(id: int, user_dto: UserDto) -> User:
+    def update(user: User) -> User:
+        if not user.id:
+            raise Exception('User id is required')
+
         with DBConnection() as db:
-            user = db.session.query(User).filter(User.id == id).first()
-            user.username = user_dto.username
-            user.password = user_dto.password
-            user.connection_limit = user_dto.connection_limit
-            user.expiration_date = user_dto.expiration_date
+            db.session.merge(user)
             db.session.commit()
-            return user
+
+        return user
 
     @staticmethod
-    def delete(id: int) -> None:
+    def delete(id: int) -> User:
         with DBConnection() as db:
             user = db.session.query(User).filter(User.id == id).first()
             db.session.delete(user)
             db.session.commit()
+            return user
