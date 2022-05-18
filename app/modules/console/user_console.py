@@ -227,7 +227,7 @@ class UserMenuConsoleBase:
 
     def width(self) -> int:
         width = [len(user['username']) for user in self._users]
-        return max(width) + 1
+        return max(width)
 
     def show(self) -> t.Union[t.Dict[str, t.Any], t.Dict[str, t.Any]]:
         if self.user_selected is None:
@@ -393,35 +393,36 @@ class UserAction:
         Console.pause()
 
 
-console = Console('GERENCIADOR DE USUÁRIOS')
-console.append_item(
-    FuncItem(
-        'CRIAR USUÁRIO',
-        lambda: UserAction.create_user_action(UserInputData()),
+def main_console():
+    console = Console('GERENCIADOR DE USUÁRIOS')
+    console.append_item(
+        FuncItem(
+            'CRIAR USUÁRIO',
+            lambda: UserAction.create_user_action(UserInputData()),
+        )
     )
-)
-console.append_item(
-    FuncItem(
-        'ALTERAR SENHA',
-        lambda: UserAction.password_change_action(
-            UserMenuConsolePassword(UserUseCase(UserRepository()).get_all()).show()
-        ),
+    console.append_item(
+        FuncItem(
+            'ALTERAR SENHA',
+            lambda: UserAction.password_change_action(
+                UserMenuConsolePassword(UserUseCase(UserRepository()).get_all()).show()
+            ),
+        )
     )
-)
-console.append_item(
-    FuncItem(
-        'ALTERAR LIMITE',
-        lambda: UserAction.limit_connection_change_action(
-            UserMenuConsoleConnectionLimit(UserUseCase(UserRepository()).get_all()).show()
-        ),
+    console.append_item(
+        FuncItem(
+            'ALTERAR LIMITE',
+            lambda: UserAction.limit_connection_change_action(
+                UserMenuConsoleConnectionLimit(UserUseCase(UserRepository()).get_all()).show()
+            ),
+        )
     )
-)
-console.append_item(
-    FuncItem(
-        'ALTERAR EXPIRACAO',
-        lambda: UserAction.expiration_date_change_action(
-            UserMenuConsoleExpirationDate(UserUseCase(UserRepository()).get_all()).show()
-        ),
+    console.append_item(
+        FuncItem(
+            'ALTERAR EXPIRACAO',
+            lambda: UserAction.expiration_date_change_action(
+                UserMenuConsoleExpirationDate(UserUseCase(UserRepository()).get_all()).show()
+            ),
+        )
     )
-)
-console.show()
+    console.show()

@@ -3,6 +3,7 @@ import typing as t
 from datetime import datetime, timedelta
 from .shellscript import exec_command
 
+
 def load_all_users() -> t.List[str]:
     path = '/etc/passwd'
     data = []
@@ -34,5 +35,19 @@ def get_pids_ssh(user: str) -> t.List[int]:
         if line and line.split()[-1] == 'sshd'
     ]
 
+
 def days_to_date(days: int) -> str:
     return (datetime.now() + timedelta(days=days)).strftime('%d/%m/%Y')
+
+
+def date_to_datetime(date: str) -> datetime:
+    if isinstance(date, datetime):
+        return date
+
+    try:
+        return datetime.strptime(date, '%d/%m/%Y')
+    except TypeError:
+        try:
+            return datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+        except TypeError:
+            return datetime.strptime(date, '%Y-%m-%d')

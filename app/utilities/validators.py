@@ -52,12 +52,12 @@ class UserValidator:
         return True
 
     @staticmethod
-    def validate_connection_limit(limit) -> bool:
+    def validate_connection_limit(limit: int) -> bool:
         if not limit:
             logger.error('Limite de conexões não informado')
             return False
 
-        if not limit.isdigit():
+        if isinstance(limit, str) and not limit.isdigit():
             logger.error('Limite de conexões deve conter apenas números')
             return False
 
@@ -74,7 +74,8 @@ class UserValidator:
             return False
 
         try:
-            datetime.strptime(date, '%d/%m/%Y')
+            if not isinstance(date, datetime):
+                datetime.strptime(date, '%d/%m/%Y')
         except ValueError:
             logger.error('Data de expiração inválida')
             return False

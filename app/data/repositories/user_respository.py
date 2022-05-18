@@ -8,6 +8,7 @@ class UserRepository:
         with DBConnection() as db:
             db.session.add(user)
             db.session.commit()
+            db.session.refresh(user)
 
         return user
 

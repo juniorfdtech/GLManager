@@ -12,7 +12,7 @@ class Console:
         self.items = []
         self.exit_item = ExitItem(text_exit)
         self.selected_exit = False
-        
+
         self.item_returned = None
         self.item_selected = None
 
@@ -109,16 +109,13 @@ class ConsoleUser(Console):
     def run(self, item, items):
         if not self.item_returned is None:
             self.item_returned = None
-        
+
         self.selected_exit = False
-        
+
         if not self.items:
             self.create_items(item, items)
-        
+
         self.show()
-
-    
-
 
 
 class Item:

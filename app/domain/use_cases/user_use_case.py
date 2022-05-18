@@ -1,7 +1,7 @@
 import typing as t
 
 from app.data.repositories import UserRepository
-from app.domain.dtos import UserDto, UserDtoCreate, UserDtoUpdate
+from app.domain.dtos import UserDto
 from app.domain.entites import User
 from app.utilities.shellscript import exec_command
 

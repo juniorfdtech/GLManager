@@ -137,7 +137,8 @@ class Formatter:
                 choices_string += (
                     self.__format_choice
                     % {
-                        'choice': self.__format_chave[0]
+                        'choice': ' ' * 2
+                        + self.__format_chave[0]
                         + set_color(
                             '%02d' % (size_items1 + i + 1 if not items[1][i].is_exit_item else 0),
                             COLOR_NAME.GREEN,
