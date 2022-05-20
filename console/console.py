@@ -138,13 +138,6 @@ class FuncItem(Item):
         return self.func(*self.args)
 
 
-class UserItem(Item):
-    def __init__(self, username, console):
-        super(UserItem, self).__init__(username)
-        self.username = username
-        self.console = console
-
-
 class ExitItem(Item):
     def __init__(self, text='SAIR'):
         super(ExitItem, self).__init__(text, shuld_exit=True)

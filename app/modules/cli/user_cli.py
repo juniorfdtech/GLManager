@@ -46,9 +46,24 @@ parser.add_argument(
     help='Days to expire (default: %(default)s)',
 )
 
-parser.add_argument('-c', '--create', help='Create user', action='store_true')
-parser.add_argument('-U', '--update', help='Update user', action='store_true')
-parser.add_argument('-r', '--remove', help='Remove user', action='store_true')
+parser.add_argument(
+    '-c',
+    '--create',
+    help='Create user',
+    action='store_true',
+)
+parser.add_argument(
+    '-U',
+    '--update',
+    help='Update user',
+    action='store_true',
+)
+parser.add_argument(
+    '-r',
+    '--remove',
+    help='Remove user',
+    action='store_true',
+)
 
 parser.add_argument('-s', '--show', help='Show user', action='store_true')
 parser.add_argument('-a', '--all', help='Show all users', action='store_true')

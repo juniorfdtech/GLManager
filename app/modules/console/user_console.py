@@ -177,6 +177,11 @@ class UserManager:
         exec_command(cmd_set_expiration_date)
         return user_dto.to_dict()
 
+    def delete_user(self) -> t.Dict[str, t.Any]:
+        user = self._user_use_case.get_by_username(self._user_input_data.username)
+        self._user_use_case.delete(user.id)
+        return user.to_dict()
+
     @staticmethod
     def show_message_user_created(user: t.Dict[str, t.Any]):
         line = create_menu_bg('Usuário criado com sucesso!')
@@ -204,16 +209,20 @@ class UserManager:
 class UserMenuConsoleBase:
     def __init__(
         self,
-        users: t.Union[t.List[t.Dict[str, t.Any]], UserDto],
+        user_use_case: UserUseCase,
         title: str = 'SELECIONE UM USUÁRIO',
     ):
-        self._users = users
+        self._user_use_case = user_use_case
         self._console = Console(title)
         self._user_selected = None
 
     @property
     def user_selected(self) -> t.Dict[str, t.Any]:
         return self._user_selected
+
+    @property
+    def _users(self) -> t.List[t.Dict[str, t.Any]]:
+        return self._user_use_case.get_all()
 
     def _set_user_selected(self, user: t.Dict[str, t.Any]) -> None:
         if not user or not isinstance(user, dict):
@@ -223,7 +232,22 @@ class UserMenuConsoleBase:
         self._console.exit()
 
     def _create_menu(self) -> None:
-        raise NotImplementedError('Método _create_menu não implementado')
+        self._console.items.clear()
+
+        if not self._users:
+            logger.error('Nenhum usuario foi encontrado.')
+            self._console.pause()
+            return
+
+        for user in self._users:
+            user_dto = UserDto.of(user)
+            self._console.append_item(
+                FuncItem(
+                    user['username'],
+                    self._set_user_selected,
+                    user_dto.to_dict(),
+                )
+            )
 
     def width(self) -> int:
         width = [len(user['username']) for user in self._users]
@@ -235,6 +259,17 @@ class UserMenuConsoleBase:
             self._console.show()
 
         return self.user_selected
+
+
+class UserMenuConsoleDeleteUser(UserMenuConsoleBase):
+    def __init__(self, user_use_case: UserUseCase, callback_select_user: t.Callable):
+        super().__init__(user_use_case)
+        self._callback_select_user = callback_select_user
+
+    def _set_user_selected(self, user: t.Dict[str, t.Any]) -> None:
+        self._user_selected = user
+        self._callback_select_user(user)
+        self._create_menu()
 
 
 class UserMenuConsolePassword(UserMenuConsoleBase):
@@ -307,6 +342,20 @@ class UserAction:
         try:
             data = user_manager.create_user()
             user_manager.show_message_user_created(data)
+        except Exception as e:
+            logger.error(e)
+
+        Console.pause()
+
+    @staticmethod
+    def delete_user_action(user_data: t.Dict[str, t.Any]):
+        if not user_data:
+            return
+
+        try:
+            user_manager = UserManager(UserInputData.of(user_data), UserUseCase(UserRepository()))
+            user_manager.delete_user()
+            logger.info('Usuário deletado com sucesso.')
         except Exception as e:
             logger.error(e)
 
@@ -403,9 +452,17 @@ def main_console():
     )
     console.append_item(
         FuncItem(
+            'DELETAR USUÁRIO',
+            lambda: UserMenuConsoleDeleteUser(
+                UserUseCase(UserRepository()), UserAction.delete_user_action
+            ).show(),
+        )
+    )
+    console.append_item(
+        FuncItem(
             'ALTERAR SENHA',
             lambda: UserAction.password_change_action(
-                UserMenuConsolePassword(UserUseCase(UserRepository()).get_all()).show()
+                UserMenuConsolePassword(UserUseCase(UserRepository())).show()
             ),
         )
     )
@@ -413,7 +470,7 @@ def main_console():
         FuncItem(
             'ALTERAR LIMITE',
             lambda: UserAction.limit_connection_change_action(
-                UserMenuConsoleConnectionLimit(UserUseCase(UserRepository()).get_all()).show()
+                UserMenuConsoleConnectionLimit(UserUseCase(UserRepository())).show()
             ),
         )
     )
@@ -421,7 +478,7 @@ def main_console():
         FuncItem(
             'ALTERAR EXPIRACAO',
             lambda: UserAction.expiration_date_change_action(
-                UserMenuConsoleExpirationDate(UserUseCase(UserRepository()).get_all()).show()
+                UserMenuConsoleExpirationDate(UserUseCase(UserRepository())).show()
             ),
         )
     )
