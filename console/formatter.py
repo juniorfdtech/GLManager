@@ -25,29 +25,31 @@ def linux_distribution():
 
 
 def create_menu_bg(text, _type='-', size=50, color_bg=BG_COLOR_NAME.RED, set_pars=True):
-    b_size = (size - (len(text) + 2)) // 2
+    text_size = len(text) + 2 if set_pars else len(text)
+    bar_size = (size - text_size) // 2
+
     if set_pars:
         return '%s\n%s%s%s%s%s\n%s' % (
             set_color('━' * 50, COLOR_NAME.BLUE),
-            set_color(_type * b_size, color_bg),
+            set_color(_type * bar_size, color_bg),
             set_color('[', COLOR_NAME.WHITE, color_bg),
             set_color(text, COLOR_NAME.GREEN, color_bg),
             set_color(']', COLOR_NAME.WHITE, color_bg),
             set_color(
-                _type * (b_size + 1 if (b_size * 2) + (len(text) + 2) < size else b_size), color_bg
+                _type * (bar_size + 1 if (bar_size * 2) + text_size < size else bar_size), color_bg
             ),
             set_color('━' * 50, COLOR_NAME.BLUE),
         )
-    else:
-        return '%s\n%s%s%s\n%s' % (
-            set_color('━' * 50, COLOR_NAME.BLUE),
-            set_color(_type * b_size, color_bg),
-            set_color(text, COLOR_NAME.GREEN, color_bg),
-            set_color(
-                _type * (b_size + 1 if (b_size * 2) + (len(text) + 2) < size else b_size), color_bg
-            ),
-            set_color('━' * 50, COLOR_NAME.BLUE),
-        )
+
+    return '%s\n%s%s%s\n%s' % (
+        set_color('━' * 50, COLOR_NAME.BLUE),
+        set_color(_type * bar_size, color_bg),
+        set_color(text, COLOR_NAME.GREEN, color_bg),
+        set_color(
+            _type * (bar_size + 1 if (bar_size * 2) + text_size < size else bar_size), color_bg
+        ),
+        set_color('━' * 50, COLOR_NAME.BLUE),
+    )
 
 
 def create_line(size=50, color=COLOR_NAME.GREEN, show=True):

@@ -116,11 +116,8 @@ class SocksActions:
             Console.pause()
             return
 
-        print(create_menu_bg('PARAR PROXY', set_pars=False))
-
-        create_line()
+        print(create_menu_bg('PARAR PROXY', _type=' ', set_pars=False))
         print(SocksActions.create_message_running_ports(running_ports))
-        create_line()
 
         while True:
             try:
@@ -148,8 +145,11 @@ class SocksActions:
 
     @staticmethod
     def create_message_running_ports(running_ports: t.List[int]) -> str:
-        message = COLOR_NAME.YELLOW + 'Portas em uso: ' + COLOR_NAME.RESET
+        message = create_line(show=False) + '\n'
+        message += COLOR_NAME.YELLOW + 'Em uso: ' + COLOR_NAME.RESET
         message += ', '.join(str(port) for port in running_ports)
+        message += '\n'
+        message += create_line(show=False)
 
         return message
 
