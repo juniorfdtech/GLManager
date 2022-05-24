@@ -24,6 +24,11 @@ class SocksManager:
             dst_port,
             mode,
         )
+
+        if mode == 'https':
+            cert = './scripts/cert.pem'
+            cmd += ' --cert %s' % cert
+
         return os.system(cmd) == 0
 
     def stop(self, port: int = 80) -> bool:

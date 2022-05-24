@@ -354,16 +354,19 @@ class HTTPS(TCP):
 
 def main():
     global REMOTE_ADDRESS
-    
+
     parser = argparse.ArgumentParser(description='Proxy', usage='%(prog)s [options]')
 
     parser.add_argument('--host', default='0.0.0.0', help='Host')
     parser.add_argument('--port', type=int, default=8080, help='Port')
     parser.add_argument('--backlog', type=int, default=5, help='Backlog')
     parser.add_argument(
-        '-r', '--remote', default='%s:%d' % (REMOTE_ADDRESS), help='Remote address, ex: 0.0.0.0:8080'
+        '-r',
+        '--remote',
+        default='%s:%d' % (REMOTE_ADDRESS),
+        help='Remote address, ex: 0.0.0.0:8080',
     )
-    parser.add_argument('--cert', default='cert.pem', help='Certificate')
+    parser.add_argument('--cert', default='./cert.pem', help='Certificate')
 
     parser.add_argument('--http', action='store_true', help='HTTP')
     parser.add_argument('--https', action='store_true', help='HTTPS')
