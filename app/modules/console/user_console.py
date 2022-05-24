@@ -199,7 +199,7 @@ class UserManager:
             COLOR_NAME.YELLOW
             + 'Data de expiração: '
             + COLOR_NAME.RESET
-            + user['expiration_date']
+            + user['expiration_date'].strftime('%d/%m/%Y')
             + '\n'
         )
 
