@@ -19,3 +19,4 @@ if __name__ == '__main__':
         user_cli_main(sys.argv[1:])
     else:
         main_console_main()
+    
