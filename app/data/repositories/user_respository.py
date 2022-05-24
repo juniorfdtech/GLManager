@@ -1,5 +1,5 @@
 from app.data.config import DBConnection
-from app.domain.entites import User
+from app.domain.entities import User
 
 
 class UserRepository:
