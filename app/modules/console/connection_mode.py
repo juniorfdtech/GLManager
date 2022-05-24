@@ -43,7 +43,7 @@ class SocksActions:
 
         while True:
             try:
-                port_src = input(COLOR_NAME.YELLOW + 'Porta: ' + COLOR_NAME.RESET)
+                port_src = input(COLOR_NAME.YELLOW + 'Porta de escuta: ' + COLOR_NAME.RESET)
                 port_src = int(port_src)
 
                 if SocksManager().is_running(port_src):
@@ -59,7 +59,7 @@ class SocksActions:
 
         while True:
             try:
-                port_dst = input(COLOR_NAME.YELLOW + 'Porta destino: ' + COLOR_NAME.RESET)
+                port_dst = input(COLOR_NAME.YELLOW + 'Porta de destino: ' + COLOR_NAME.RESET)
                 port_dst = int(port_dst)
 
                 if port_dst == port_src:
@@ -72,7 +72,7 @@ class SocksActions:
             except KeyboardInterrupt:
                 return
 
-        if not port_src <= 0 or not port_dst <= 0:
+        if port_src <= 0 or port_dst <= 0:
             logger.error('Porta inválida!')
             Console.pause()
             return
