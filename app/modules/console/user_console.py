@@ -180,10 +180,16 @@ class UserManager:
     def delete_user(self) -> t.Dict[str, t.Any]:
         user = self._user_use_case.get_by_username(self._user_input_data.username)
         self._user_use_case.delete(user.id)
+
+        cmd = 'userdel --force %s' % user.username
+        exec_command(cmd)
+
         return user.to_dict()
 
     @staticmethod
     def show_message_user_created(user: t.Dict[str, t.Any]):
+        Console.clear_screen()
+
         line = create_menu_bg('Usuário criado com sucesso!')
         line += '\n'
         line += COLOR_NAME.YELLOW + 'Nome de usuário: ' + COLOR_NAME.RESET + user['username'] + '\n'
