@@ -442,7 +442,7 @@ class UserAction:
         Console.pause()
 
 
-def main_console():
+def user_console_main():
     console = Console('GERENCIADOR DE USUÁRIOS')
     console.append_item(
         FuncItem(

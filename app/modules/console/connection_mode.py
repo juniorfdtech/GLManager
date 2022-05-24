@@ -139,7 +139,7 @@ class SocksActions:
         return message
 
 
-def main_socks():
+def socks_console_main():
     console = Console('SOCKS Manager')
     console.append_item(FuncItem('ABRIR PORTA HTTP', SocksActions.start, 'http'))
     console.append_item(FuncItem('ABRIR PORTA HTTPS', SocksActions.start, 'https'))
