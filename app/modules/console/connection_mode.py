@@ -16,8 +16,14 @@ class SocksManager:
         cmd = 'screen -ls | grep %s' % port
         return os.system(cmd) == 0
 
-    def start(self, port: int = 80, mode: str = 'http') -> None:
-        cmd = 'screen -mdS socks:%s python3 %s --port %s --%s' % (port, self.socks_path, port, mode)
+    def start(self, mode: str = 'http', src_port: int = 80, dst_port: int = 8080) -> None:
+        cmd = 'screen -mdS socks:%s python3 %s --port %s --remote 127.0.0.1:%s --%s' % (
+            src_port,
+            self.socks_path,
+            src_port,
+            dst_port,
+            mode,
+        )
         return os.system(cmd) == 0
 
     def stop(self, port: int = 80) -> bool:
@@ -43,11 +49,11 @@ class SocksActions:
 
         while True:
             try:
-                port_src = input(COLOR_NAME.YELLOW + 'Porta de escuta: ' + COLOR_NAME.RESET)
-                port_src = int(port_src)
+                src_port = input(COLOR_NAME.YELLOW + 'Porta de escuta: ' + COLOR_NAME.RESET)
+                src_port = int(src_port)
 
-                if SocksManager().is_running(port_src):
-                    logger.error('Porta %s já está em uso' % port_src)
+                if SocksManager().is_running(src_port):
+                    logger.error('Porta %s já está em uso' % src_port)
                     continue
 
                 break
@@ -59,10 +65,10 @@ class SocksActions:
 
         while True:
             try:
-                port_dst = input(COLOR_NAME.YELLOW + 'Porta de destino: ' + COLOR_NAME.RESET)
-                port_dst = int(port_dst)
+                dst_port = input(COLOR_NAME.YELLOW + 'Porta de destino: ' + COLOR_NAME.RESET)
+                dst_port = int(dst_port)
 
-                if port_dst == port_src:
+                if dst_port == src_port:
                     raise ValueError
 
                 break
@@ -72,19 +78,19 @@ class SocksActions:
             except KeyboardInterrupt:
                 return
 
-        if port_src <= 0 or port_dst <= 0:
+        if src_port <= 0 or dst_port <= 0:
             logger.error('Porta inválida!')
             Console.pause()
             return
 
         manager = SocksManager()
 
-        if manager.is_running(port_src):
-            logger.error('Porta %s já está em uso!' % port_src)
+        if manager.is_running(src_port):
+            logger.error('Porta %s já está em uso!' % src_port)
             Console.pause()
             return
 
-        if not manager.start(port_src, 'http'):
+        if not manager.start(src_port=src_port, dst_port=dst_port, mode=mode):
             logger.error('Falha ao iniciar proxy!')
             Console.pause()
             return
