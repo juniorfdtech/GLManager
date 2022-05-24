@@ -52,6 +52,12 @@ class SocksActions:
     def start(mode: str = 'http') -> None:
         print(create_menu_bg('PORTA - ' + mode.upper()))
 
+        manager = SocksManager()
+        ports = manager.get_running_ports()
+
+        if ports:
+            print(SocksActions.create_message_running_ports(ports))
+
         while True:
             try:
                 src_port = input(COLOR_NAME.YELLOW + 'Porta de escuta: ' + COLOR_NAME.RESET)
@@ -87,8 +93,6 @@ class SocksActions:
             logger.error('Porta inválida!')
             Console.pause()
             return
-
-        manager = SocksManager()
 
         if manager.is_running(src_port):
             logger.error('Porta %s já está em uso!' % src_port)
