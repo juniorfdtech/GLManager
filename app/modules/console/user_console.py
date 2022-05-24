@@ -192,7 +192,7 @@ class UserManager:
             COLOR_NAME.YELLOW
             + 'Limite de conexões: '
             + COLOR_NAME.RESET
-            + user['connection_limit']
+            + str(user['connection_limit'])
             + '\n'
         )
         line += (
