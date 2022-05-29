@@ -10,32 +10,11 @@ from urllib.parse import urlparse
 from typing import List, Tuple, Union, Optional
 
 __author__ = 'Glemison C. Dutra'
-__version__ = '1.0.1'
-
-usage = f'''
-    HTTP Proxy v{__version__} - {__author__}
-
-    # Uso:
-        HTTPS: 
-            python3 proxy.py --https --cert cert.pem --port 443
-        
-        HTTP:
-            python3 proxy.py --http --port 80
-    
-    # Uso em background:
-        HTTPS:
-            screen -dmS proxy python3 proxy.py --https --cert cert.pem --port 443
-        
-        HTTP:
-            screen -dmS proxy python3 proxy.py --http --port 80
-        
-    # Finalizar uso em background:
-        screen -X -S proxy quit
-'''
+__version__ = '1.0.2'
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_RESPONSE = b'HTTP/1.1 101 Connection Established\r\n\r\n'
+DEFAULT_RESPONSE = b'HTTP/1.1 200 Connection Established\r\n\r\n'
 REMOTE_ADDRESS = ('0.0.0.0', 22)
 
 
@@ -171,7 +150,7 @@ class Server(Connection):
         self.conn = socket.create_connection(self.addr, timeout)
         self.conn.settimeout(None)
 
-        logger.info(f'{self} Conexão estabelecida')
+        logger.debug(f'{self} Conexão estabelecida')
 
 
 class Proxy(threading.Thread):
@@ -201,9 +180,11 @@ class Proxy(threading.Thread):
             return
 
         self.http_parser.parse(data)
+        host, port = (None, None)
 
         if self.http_parser.method == 'CONNECT':
             host, port = self.http_parser.url.path.split(':')
+
         elif self.http_parser.url.hostname or self.http_parser.headers.get('Host'):
             host, port = (
                 self.http_parser.url.hostname
@@ -211,23 +192,19 @@ class Proxy(threading.Thread):
                 else self.http_parser.headers['Host'],
                 self.http_parser.url.port or REMOTE_ADDRESS[1],
             )
-        else:
-            raise ValueError('Invalid URL')
+
+        if not host or not port:
+            raise ValueError('Host or port is empty')
 
         self.server = Server.of((host, int(port)))
         self.server.connect()
 
-        if (
-            self.http_parser.method == 'CONNECT'
-            or str(port) == '22'
-            or str(port) == '443'
-            or str(port) == '1194'
-        ):
+        if self.http_parser.method == 'CONNECT' or str(port) == str(REMOTE_ADDRESS[1]):
             self.client.queue(DEFAULT_RESPONSE)
         else:
             self.server.queue(self.http_parser.build())
 
-        logger.info(f'{self.client} -> Solicitação: {self.http_parser.build()}')
+        logger.debug(f'{self.client} -> Solicitação: {self.http_parser.build()}')
 
     def _get_waitable_lists(self) -> Tuple[List[socket.socket]]:
         r, w, e = [self.client.conn], [], []
@@ -279,15 +256,16 @@ class Proxy(threading.Thread):
 
     def run(self) -> None:
         try:
-            logger.info(f'{self.client} Conectado')
+            logger.debug(f'{self.client} Conectado')
             self._process()
         except Exception as e:
-            logger.error(f'{self.client} Erro: {e}')
+            logger.exception(f'{self.client} Erro: {e}')
         finally:
             self.client.close()
             if self.server and not self.server.closed:
                 self.server.close()
-            logger.info(f'{self.client} Desconectado')
+
+            logger.debug(f'{self.client} Desconectado')
 
 
 class TCP:
@@ -376,20 +354,21 @@ def main():
 
     args = parser.parse_args()
 
-    if args.usage:
-        print(usage)
-        return
-
     if args.remote:
         REMOTE_ADDRESS = args.remote.split(':')[0], int(args.remote.split(':')[1])
 
+    server = None
+
     if args.http:
         server = HTTP((args.host, args.port), args.backlog)
-    elif args.https:
+
+    if args.https:
         if not os.path.exists(args.cert):
             raise FileNotFoundError(f'Certicado {args.cert} não encontrado')
+
         server = HTTPS((args.host, args.port), args.cert, args.backlog)
-    else:
+
+    if server is None:
         parser.print_help()
         return
 
