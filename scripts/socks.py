@@ -14,7 +14,7 @@ __version__ = '1.0.2'
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_RESPONSE = b'HTTP/1.1 200 Connection Established\r\n\r\n'
+DEFAULT_RESPONSE = b'HTTP/1.1 101 Connection Established\r\n\r\n'
 REMOTE_ADDRESS = ('0.0.0.0', 22)
 
 
