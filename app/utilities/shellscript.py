@@ -10,4 +10,7 @@ def exec_command(command: str) -> str:
     if command.find('> /dev/null 2>&1') == -1:
         command += ' > /dev/null 2>&1'
 
-    return subprocess.check_output(command, shell=True).decode('utf-8')
+    bash = 'bash -c' if os.name == 'posix' else 'cmd /c'
+    bash += ' "' + command + '"'
+    data = os.popen(bash).read()
+    return data.strip()

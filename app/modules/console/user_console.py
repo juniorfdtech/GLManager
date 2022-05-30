@@ -2,10 +2,10 @@ import datetime
 import typing as t
 
 from console import Console, FuncItem, COLOR_NAME
-from console.formatter import create_menu_bg
+from console.formatter import create_menu_bg, create_line
 
 from app.utilities.logger import logger
-from app.utilities.utils import days_to_date, exec_command
+from app.utilities.utils import days_to_date, exec_command, count_connections
 from app.utilities.validators import UserValidator
 
 from app.domain.dtos import UserDto
@@ -447,6 +447,60 @@ class UserAction:
 
         Console.pause()
 
+    @staticmethod
+    def monitor_action() -> None:
+        users = UserUseCase(UserRepository()).get_all()
+
+        width = max(len(user['username']) for user in users)
+        width_username = width if width > 7 else 7
+
+        message = (
+            create_menu_bg(
+                (
+                    ' | '.join(
+                        [
+                            'USUARIO'.ljust(width),
+                            'LIMITE DE CONEXÕES'.ljust(width),
+                            'DATA DE EXPIRACAO'.ljust(width),
+                        ]
+                    )
+                ),
+                set_pars=False,
+            )
+            + '\n'
+        )
+
+        for user in users:
+            user_dto = UserDto.of(user)
+
+            count = count_connections(user_dto.username)
+
+            message += ' {} | {} | {}\n'.format(
+                COLOR_NAME.GREEN + user_dto.username.ljust(width_username) + COLOR_NAME.RESET,
+                str(
+                    '%s%02d/%s%02d%s'
+                    % (
+                        COLOR_NAME.GREEN,
+                        user_dto.connection_limit,
+                        COLOR_NAME.GREEN if count > 0 else COLOR_NAME.RED,
+                        count,
+                        COLOR_NAME.RESET,
+                    )
+                )
+                .rjust(30)
+                .ljust(36),
+                '%s%s%s' % (
+                    COLOR_NAME.GREEN,
+                    user_dto.expiration_date.strftime('%d/%m/%Y').rjust(15),
+                    COLOR_NAME.RESET,
+                ),
+            )
+
+            message += create_line(show=False) + '\n'
+
+        print(message)
+        Console.pause()
+
 
 def user_console_main():
     console = Console('GERENCIADOR DE USUÁRIOS')
@@ -486,6 +540,12 @@ def user_console_main():
             lambda: UserAction.expiration_date_change_action(
                 UserMenuConsoleExpirationDate(UserUseCase(UserRepository())).show()
             ),
+        )
+    )
+    console.append_item(
+        FuncItem(
+            'MONITOR',
+            lambda: UserAction.monitor_action(),
         )
     )
     console.show()

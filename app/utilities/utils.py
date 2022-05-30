@@ -36,6 +36,12 @@ def get_pids_ssh(user: str) -> t.List[int]:
     ]
 
 
+def count_connections(user: str) -> int:
+    command = f'ps -u {user} | grep sshd | wc -l'
+    output = exec_command(command)
+    return int(output.strip()) if output else 0
+
+
 def days_to_date(days: int) -> str:
     return (datetime.now() + timedelta(days=days)).strftime('%d/%m/%Y')
 
