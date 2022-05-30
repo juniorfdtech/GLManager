@@ -17,8 +17,9 @@ class SocksManager:
         return os.system(cmd) == 0
 
     def start(self, mode: str = 'http', src_port: int = 80, dst_port: int = 8080) -> None:
-        cmd = 'screen -mdS socks:%s python3 %s --port %s --remote 127.0.0.1:%s --%s' % (
+        cmd = 'screen -mdS socks:%s:%s python3 %s --port %s --remote 127.0.0.1:%s --%s' % (
             src_port,
+            mode,
             self.socks_path,
             src_port,
             dst_port,
@@ -31,20 +32,104 @@ class SocksManager:
 
         return os.system(cmd) == 0
 
-    def stop(self, port: int = 80) -> bool:
-        cmd = 'screen -X -S socks:%s quit' % port
+    def stop(self, mode: str = 'http', src_port: int = 80) -> None:
+        cmd = 'screen -X -S socks:%s:%s quit' % (src_port, mode)
         return os.system(cmd) == 0
 
-    def get_running_ports(self) -> t.List[int]:
+    @staticmethod
+    def get_running_ports() -> t.List[int]:
         cmd = 'screen -ls | grep socks: | awk \'{print $1}\' | awk -F: \'{print $2}\''
         output = os.popen(cmd).read()
         return [int(port) for port in output.split('\n') if port]
+
+    @staticmethod
+    def get_running_socks() -> t.Dict[int, str]:
+        cmd = 'screen -ls | grep socks: | awk \'{print $1}\''
+        output = os.popen(cmd).readlines()
+        socks = dict(
+            (int(port), mode.strip()) for port, mode in (line.split(':')[1:] for line in output)
+        )
+        return socks
 
     @staticmethod
     def download() -> bool:
         url = 'https://raw.githubusercontent.com/DuTra01/GLPlugins/master/scripts/proxy.py'
         cmd = 'wget -O %s %s' % (SocksManager.socks_path, url)
         return os.system(cmd) == 0
+
+
+class ConsolePort:
+    def __init__(self, title: str = 'SELECIONE UMA PORTA') -> None:
+        self._title = title
+        self._console = Console(title)
+        self._current_port_selected = None
+        self._current_mode_selected = None
+
+    @property
+    def current_port_selected(self) -> int:
+        if self._current_port_selected is None:
+            self._current_port_selected = self.show()
+
+        return self._current_port_selected
+
+    @property
+    def current_mode_selected(self) -> str:
+        if self._current_mode_selected is None:
+            self.show()
+
+        return self._current_mode_selected
+
+    def _set_port_mode_selected(self, port: int, mode: str) -> None:
+        self._current_port_selected = port
+        self._current_mode_selected = mode
+        self._console.exit()
+
+    def _create_menu(self) -> None:
+        self._console.items.clear()
+
+        socks = SocksManager.get_running_socks()
+
+        if not socks:
+            logger.error('Nenhuma porta ativa')
+            return
+
+        width = self.width([i for x in socks.items() for i in x])
+        for port, mode in socks.items():
+            item = FuncItem(
+                '%s - %s' % (str(port).ljust(width), mode),
+                self._set_port_mode_selected,
+                str(port),
+                mode,
+            )
+            self._console.items.append(item)
+
+        self._console.items.append(FuncItem('Sair', self._console.exit))
+
+    def width(self, ports: t.List[t.Any]) -> int:
+        return max(len(str(port)) for port in ports)
+
+    def show(self) -> int:
+        if self._current_port_selected is None:
+            self._create_menu()
+            self._console.show()
+
+        return self._current_port_selected
+
+
+class ConsoleStopPort(ConsolePort):
+    def _set_port_mode_selected(self, port: int, mode: str) -> None:
+        manager = SocksManager()
+
+        if manager.stop(mode, port):
+            logger.info('Porta %s desligada' % port)
+            self._create_menu()
+        else:
+            logger.error('Erro ao desligar porta %s' % port)
+
+        self._current_mode_selected = mode
+        self._current_port_selected = port
+
+        self._console.pause()
 
 
 class SocksActions:
@@ -109,39 +194,8 @@ class SocksActions:
 
     @staticmethod
     def stop() -> None:
-        running_ports = SocksManager().get_running_ports()
-
-        if not running_ports:
-            logger.error('Nenhum proxy está em execução!')
-            Console.pause()
-            return
-
-        print(create_menu_bg('PARAR PROXY', _type=' ', set_pars=False))
-        print(SocksActions.create_message_running_ports(running_ports))
-
-        while True:
-            try:
-                port = input(COLOR_NAME.YELLOW + 'Porta: ' + COLOR_NAME.RESET)
-                port = int(port)
-
-                if not SocksManager().is_running(port):
-                    logger.error('Porta %s não está em uso!' % port)
-                    continue
-
-                break
-            except ValueError:
-                logger.error('Porta inválida!')
-
-            except KeyboardInterrupt:
-                return
-
-        if not SocksManager().stop(port):
-            logger.error('Falha ao parar proxy!')
-            Console.pause()
-            return
-
-        logger.info('Proxy parado com sucesso!')
-        Console.pause()
+        console = ConsoleStopPort()
+        console.show()
 
     @staticmethod
     def create_message_running_ports(running_ports: t.List[int]) -> str:
