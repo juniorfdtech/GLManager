@@ -154,6 +154,7 @@ class V2RayActions:
         Console.pause()
         callback(status)
 
+    @staticmethod
     def uninstall(callback: t.Callable) -> None:
         logger.info('Desinstalando V2Ray...')
         status = V2RayActions.v2ray_manager.uninstall()
@@ -306,10 +307,5 @@ def v2ray_console_main():
     console.append_item(FuncItem('REMOVER UUID', actions.remove_uuid))
     console.append_item(FuncItem('LISTAR UUID\'S', actions.get_uuid_list))
 
-    def callback(status: bool):
-        if status:
-            console.exit()
-            v2ray_console_main()
-
-    console.append_item(FuncItem('DESINSTALAR V2RAY', actions.uninstall, callback))
+    console.append_item(FuncItem('DESINSTALAR V2RAY', actions.uninstall, console_callback))
     console.show()
