@@ -31,27 +31,11 @@ config_string = '''
   "dns": null,
   "inbounds": [
     {
-      "listen": "127.0.0.1",
-      "port": 62789,
-      "protocol": "dokodemo-door",
-      "settings": {
-        "address": "127.0.0.1"
-      },
-      "streamSettings": null,
-      "tag": "api",
-      "sniffing": null
-    },
-    {
       "listen": null,
       "port": 5555,
       "protocol": "vless",
       "settings": {
-        "clients": [
-          {
-            "id": "",
-            "flow": "xtls-rprx-direct"
-          }
-        ],
+        "clients": [],
         "decryption": "none",
         "fallbacks": []
       },

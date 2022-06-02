@@ -47,9 +47,8 @@ class V2RayConfig:
             json.dump(config_data, f, indent=4)
 
     def create(self, port: int, protocol: str) -> None:
-        v2ray_config_template['inbounds'][1]['port'] = port
-        v2ray_config_template['inbounds'][1]['protocol'] = protocol
-        v2ray_config_template['inbounds'][1]['settings']['clients']['id'] = create_uuid()
+        v2ray_config_template['inbounds'][0]['port'] = port
+        v2ray_config_template['inbounds'][0]['protocol'] = protocol
         self.save(v2ray_config_template)
 
 
@@ -103,11 +102,11 @@ class V2RayManager:
 
     def get_running_port(self) -> int:
         config_data = self.config.load()
-        return config_data['inbounds'][1]['port']
+        return config_data['inbounds'][0]['port']
 
     def change_port(self, port: int) -> bool:
         config_data = self.config.load()
-        config_data['inbounds'][1]['port'] = port
+        config_data['inbounds'][0]['port'] = port
 
         self.config.save(config_data)
         self.restart()
@@ -118,7 +117,7 @@ class V2RayManager:
         config_data = self.config.load()
         uuid = create_uuid()
 
-        config_data['inbounds'][1]['settings']['clients'].append(
+        config_data['inbounds'][0]['settings']['clients'].append(
             {
                 'id': uuid,
                 'flow': 'xtls-rprx-direct',
@@ -131,9 +130,9 @@ class V2RayManager:
 
     def remove_uuid(self, uuid: str) -> None:
         config_data = self.config.load()
-        config_data['inbounds'][1]['settings']['clients'] = [
+        config_data['inbounds'][0]['settings']['clients'] = [
             client
-            for client in config_data['inbounds'][1]['settings']['clients']
+            for client in config_data['inbounds'][0]['settings']['clients']
             if client['id'] != uuid
         ]
 
@@ -142,7 +141,7 @@ class V2RayManager:
 
     def get_uuid_list(self) -> t.List[str]:
         config_data = self.config.load()
-        return [client['id'] for client in config_data['inbounds'][1]['settings']['clients']]
+        return [client['id'] for client in config_data['inbounds'][0]['settings']['clients']]
 
 
 class V2RayActions:
@@ -152,10 +151,9 @@ class V2RayActions:
     def install(callback: t.Callable) -> None:
         logger.info('Instalando V2Ray...')
         status = V2RayActions.v2ray_manager.install()
-        current_uuid = V2RayActions.v2ray_manager.get_uuid_list()[0]
 
         if status:
-            logger.info('UUID: {}'.format(COLOR_NAME.GREEN + current_uuid + COLOR_NAME.END))
+            logger.info('Gere um novo UUID para o cliente.')
             logger.info('V2Ray instalado com sucesso!')
         else:
             logger.error('Falha ao instalar V2Ray!')
@@ -275,15 +273,14 @@ class V2RayActions:
 
         Console.pause()
 
-
     @staticmethod
     def view_vless_config() -> None:
         vless_link = 'vless://@{}?{}'
-        
+
         config = V2RayActions.v2ray_manager.config.load()
-        type = config['inbounds'][1]['streamSettings']['network']
-        port = config['inbounds'][1]['port']
-        
+        type = config['inbounds'][0]['streamSettings']['network']
+        port = config['inbounds'][0]['port']
+
 
 class ConsoleUUID:
     def __init__(self, title: str = 'V2Ray UUID') -> None:
