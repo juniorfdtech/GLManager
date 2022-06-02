@@ -64,10 +64,16 @@ class UserMenuConsole:
 
 
 class ConsoleUUID:
-    def __init__(self, title: str = 'V2Ray UUID', v2ray_manager: V2RayManager = None) -> None:
+    def __init__(
+        self,
+        title: str = 'V2Ray UUID',
+        v2ray_manager: V2RayManager = None,
+        user_use_case: UserUseCase = None,
+    ) -> None:
         self.title = title
         self.console = Console(title=self.title, formatter=Formatter(1))
         self.v2ray_manager = v2ray_manager
+        self.user_use_case = user_use_case
 
     def select_uuid(self, uuid: str) -> None:
         raise NotImplementedError
@@ -80,7 +86,14 @@ class ConsoleUUID:
             return
 
         for uuid in uuids:
-            self.console.append_item(FuncItem(uuid, self.select_uuid, uuid))
+            text = '%s' % uuid
+
+            if self.user_use_case is not None:
+                user_dto = self.user_use_case.get_by_uuid(uuid)
+                if user_dto:
+                    text += ' - %s' % user_dto.username
+
+            self.console.append_item(FuncItem(text, self.select_uuid, uuid))
 
     def start(self) -> None:
         self.create_items()

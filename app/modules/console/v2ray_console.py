@@ -207,26 +207,8 @@ class V2RayActions:
 
 
 class ConsoleDeleteUUID(ConsoleUUID):
-    def __init__(self, v2ray_manager: V2RayManager) -> None:
-        super().__init__('Remover UUID', v2ray_manager)
-
-    def create_items(self) -> None:
-        user_use_case = UserUseCase(UserRepository())
-        uuid_list = self.v2ray_manager.get_uuid_list()
-
-        if not uuid_list:
-            logger.error('Nenhum UUID encontrado')
-            Console.pause()
-            return
-
-        for uuid in uuid_list:
-            user_dto = user_use_case.get_by_uuid(uuid)
-            text = '%s' % uuid
-
-            if user_dto:
-                text += ' - %s' % user_dto.username
-
-            self.console.append_item(FuncItem(text, self.select_uuid, uuid))
+    def __init__(self, v2ray_manager: V2RayManager, user_use_case: UserUseCase = None):
+        super().__init__('Remover UUID', v2ray_manager, user_use_case)
 
     def select_uuid(self, uuid: str) -> None:
         V2RayActions.remove_uuid(uuid)
@@ -236,8 +218,8 @@ class ConsoleDeleteUUID(ConsoleUUID):
 
 
 class ConsoleListUUID(ConsoleUUID):
-    def __init__(self, v2ray_manager: V2RayManager) -> None:
-        super().__init__('Listar UUIDs', v2ray_manager)
+    def __init__(self, v2ray_manager: V2RayManager, user_use_case: UserUseCase = None):
+        super().__init__('Listar UUIDs', v2ray_manager, user_use_case)
 
     def start(self) -> None:
         self.create_items()
@@ -274,10 +256,16 @@ def v2ray_console_main():
     console.append_item(FuncItem('ALTERAR PORTA', action.change_port))
     console.append_item(FuncItem('CRIAR NOVO UUID', action.create_uuid))
     console.append_item(
-        FuncItem('REMOVER UUID', lambda: ConsoleDeleteUUID(action.v2ray_manager).start())
+        FuncItem(
+            'REMOVER UUID',
+            lambda: ConsoleDeleteUUID(action.v2ray_manager, UserUseCase(UserRepository)).start(),
+        )
     )
     console.append_item(
-        FuncItem('LISTAR UUID\'S', lambda: ConsoleListUUID(action.v2ray_manager).start())
+        FuncItem(
+            'LISTAR UUID\'S',
+            lambda: ConsoleListUUID(action.v2ray_manager, UserUseCase(UserRepository)).start(),
+        )
     )
     console.append_item(FuncItem('VER CONFIG. V2RAY', action.view_vless_config))
     console.append_item(FuncItem('DESINSTALAR V2RAY', action.uninstall, console_callback))
