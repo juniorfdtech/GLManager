@@ -12,6 +12,9 @@ from app.domain.dtos import UserDto
 from app.domain.use_cases import UserUseCase
 
 from app.data.repositories import UserRepository
+from .utils import UserMenuConsole
+
+from .v2ray_utils import V2rayUtils
 
 
 class UserInputData:
@@ -21,11 +24,13 @@ class UserInputData:
         password: t.Optional[str] = None,
         connection_limit: t.Optional[str] = None,
         expiration_date: t.Optional[str] = None,
+        v2ray_uuid: t.Optional[str] = None,
     ):
         self._username = username
         self._password = password
         self._connection_limit = connection_limit
         self._expiration_date = expiration_date
+        self._v2ray_uuid = v2ray_uuid
 
     @property
     def username(self):
@@ -90,6 +95,21 @@ class UserInputData:
         if UserValidator.validate_expiration_date(value):
             self._expiration_date = value
 
+    @property
+    def v2ray_uuid(self):
+        while not self._v2ray_uuid and V2rayUtils.v2ray_is_installed():
+            self._v2ray_uuid = input(
+                COLOR_NAME.YELLOW + 'Você deseja criar um UUID? (s/n) ' + COLOR_NAME.RESET
+            )
+            if self._v2ray_uuid == 's':
+                self._v2ray_uuid = V2rayUtils.create_uuid()
+
+        return self._v2ray_uuid
+
+    @v2ray_uuid.setter
+    def v2ray_uuid(self, value):
+        self._v2ray_uuid = value
+
     def to_dict(self):
         return {
             'username': self.username,
@@ -99,6 +119,7 @@ class UserInputData:
                 self.expiration_date,
                 '%d/%m/%Y',
             ),
+            'v2ray_uuid': self.v2ray_uuid,
         }
 
     @classmethod
@@ -111,6 +132,7 @@ class UserInputData:
             password=data.get('password'),
             connection_limit=data.get('connection_limit'),
             expiration_date=data.get('expiration_date'),
+            v2ray_uuid=data.get('v2ray_uuid'),
         )
 
 
@@ -209,77 +231,27 @@ class UserManager:
             + '\n'
         )
 
+        if user['v2ray_uuid']:
+            line += (
+                COLOR_NAME.YELLOW + 'UUID do V2Ray: ' + COLOR_NAME.RESET + user['v2ray_uuid'] + '\n'
+            )
+
         print(line)
 
 
-class UserMenuConsoleBase:
-    def __init__(
-        self,
-        user_use_case: UserUseCase,
-        title: str = 'SELECIONE UM USUÁRIO',
-    ):
-        self._user_use_case = user_use_case
-        self._console = Console(title)
-        self._user_selected = None
-
-    @property
-    def user_selected(self) -> t.Dict[str, t.Any]:
-        return self._user_selected
-
-    @property
-    def _users(self) -> t.List[t.Dict[str, t.Any]]:
-        return self._user_use_case.get_all()
-
-    def _set_user_selected(self, user: t.Dict[str, t.Any]) -> None:
-        if not user or not isinstance(user, dict):
-            raise ValueError('Usuário não informado')
-
-        self._user_selected = user
-        self._console.exit()
-
-    def _create_menu(self) -> None:
-        self._console.items.clear()
-
-        if not self._users:
-            logger.error('Nenhum usuario foi encontrado.')
-            self._console.pause()
-            return
-
-        for user in self._users:
-            user_dto = UserDto.of(user)
-            self._console.append_item(
-                FuncItem(
-                    user['username'],
-                    self._set_user_selected,
-                    user_dto.to_dict(),
-                )
-            )
-
-    def width(self) -> int:
-        width = [len(user['username']) for user in self._users]
-        return max(width)
-
-    def show(self) -> t.Union[t.Dict[str, t.Any], t.Dict[str, t.Any]]:
-        if self.user_selected is None:
-            self._create_menu()
-            self._console.show()
-
-        return self.user_selected
-
-
-class UserMenuConsoleDeleteUser(UserMenuConsoleBase):
+class UserMenuConsoleDeleteUser(UserMenuConsole):
     def __init__(self, user_use_case: UserUseCase, callback_select_user: t.Callable):
         super().__init__(user_use_case)
         self._callback_select_user = callback_select_user
 
-    def _set_user_selected(self, user: t.Dict[str, t.Any]) -> None:
+    def select_user(self, user: t.Dict[str, t.Any]) -> None:
         self._user_selected = user
         self._callback_select_user(user)
-        self._create_menu()
+        self.create_items()
 
 
-class UserMenuConsolePassword(UserMenuConsoleBase):
-    def _create_menu(self) -> None:
+class UserMenuConsolePassword(UserMenuConsole):
+    def create_items(self) -> None:
         self._console.items.clear()
 
         if not self._users:
@@ -292,14 +264,14 @@ class UserMenuConsolePassword(UserMenuConsoleBase):
             self._console.append_item(
                 FuncItem(
                     user['username'].ljust(self.width()) + ' - ' + user['password'],
-                    self._set_user_selected,
+                    self.select_user,
                     user_dto.to_dict(),
                 )
             )
 
 
-class UserMenuConsoleConnectionLimit(UserMenuConsoleBase):
-    def _create_menu(self) -> None:
+class UserMenuConsoleConnectionLimit(UserMenuConsole):
+    def create_items(self) -> None:
         self._console.items.clear()
 
         if not self._users:
@@ -312,14 +284,14 @@ class UserMenuConsoleConnectionLimit(UserMenuConsoleBase):
             self._console.append_item(
                 FuncItem(
                     user['username'].ljust(self.width()) + ' - %02d' % user['connection_limit'],
-                    self._set_user_selected,
+                    self.select_user,
                     user_dto.to_dict(),
                 )
             )
 
 
-class UserMenuConsoleExpirationDate(UserMenuConsoleBase):
-    def _create_menu(self) -> None:
+class UserMenuConsoleExpirationDate(UserMenuConsole):
+    def create_items(self) -> None:
         self._console.items.clear()
 
         if not self._users:
@@ -334,7 +306,7 @@ class UserMenuConsoleExpirationDate(UserMenuConsoleBase):
                     user['username'].ljust(self.width())
                     + ' - '
                     + user['expiration_date'].strftime('%d/%m/%Y'),
-                    self._set_user_selected,
+                    self.select_user,
                     user_dto.to_dict(),
                 )
             )
@@ -343,6 +315,9 @@ class UserMenuConsoleExpirationDate(UserMenuConsoleBase):
 class UserAction:
     @staticmethod
     def create_user_action(user_input_data: UserInputData):
+        Console.clear_screen()
+        print(create_menu_bg('CRIAR USUARIO', set_pars=False))
+
         user_manager = UserManager(user_input_data, UserUseCase(UserRepository()))
 
         try:
@@ -489,7 +464,8 @@ class UserAction:
                 )
                 .rjust(30)
                 .ljust(36),
-                '%s%s%s' % (
+                '%s%s%s'
+                % (
                     COLOR_NAME.GREEN,
                     user_dto.expiration_date.strftime('%d/%m/%Y').rjust(15),
                     COLOR_NAME.RESET,
@@ -498,6 +474,7 @@ class UserAction:
 
             message += create_line(show=False) + '\n'
 
+        Console.clear_screen()
         print(message)
         Console.pause()
 

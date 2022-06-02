@@ -19,8 +19,19 @@ class UserRepository:
 
     @staticmethod
     def get_by_username(username: str) -> User:
+        if not username:
+            raise ValueError('username is required')
+
         with DBConnection() as db:
             return db.session.query(User).filter(User.username == username).first()
+
+    @staticmethod
+    def get_by_uuid(uuid: str) -> User:
+        if not uuid:
+            raise ValueError('uuid is required')
+
+        with DBConnection() as db:
+            return db.session.query(User).filter(User.v2ray_uuid == uuid).first()
 
     @staticmethod
     def get_all() -> list:

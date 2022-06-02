@@ -99,7 +99,8 @@ BANNER += (
 
 
 class Formatter:
-    def __init__(self):
+    def __init__(self, columns=2):
+        self.__columns = columns
         self.__format_chave = [set_color('[', COLOR_NAME.CYAN), set_color(']', COLOR_NAME.CYAN)]
         self.__format_choice = '%(choice)s %(point)s %(text)s'
         self.__items = None
@@ -181,7 +182,7 @@ class Formatter:
         if self.__items:
             format_string += self.__items
             format_string += set_color('━' * 50, COLOR_NAME.BLUE) + '\n'
-        if len(items) < 10:
+        if len(items) < 10 or self.__columns == 1:
             format_string += self.format_columm(items)
         else:
             format_string += self.format_items_two_colums(items)

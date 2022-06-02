@@ -1,148 +1,17 @@
 import typing as t
-import os
-import json
-
-import uuid
-import time
 
 from console import Console, FuncItem, COLOR_NAME
 from console.formatter import create_menu_bg, create_line
 
 from app.utilities.logger import logger
-from app.utilities.v2ray_config_template import config as v2ray_config_template
 from app.utilities.utils import get_ip
 
-V2RAY_CMD_INSTALL = 'bash -c \'bash <(curl -L -s https://multi.netlify.app/go.sh)\' -f'
-V2RAY_CONFIG_PATH = '/etc/v2ray/config.json'
+from app.data.repositories import UserRepository
+from app.domain.use_cases import UserUseCase
+from app.domain.dtos import UserDto
 
-
-def create_uuid() -> str:
-    import hashlib, random, string
-
-    string_pool = string.ascii_letters + string.digits
-    data = ''.join(random.choice(string_pool) for _ in range(32))
-    data += str(int(time.time()))
-    data += str(uuid.getnode())
-
-    hash_data = hashlib.sha256(data.encode('utf-8')).hexdigest()
-
-    return str(uuid.uuid5(uuid.NAMESPACE_DNS, hash_data))
-
-
-class V2RayConfig:
-    def __init__(self) -> None:
-        self.config_path = V2RAY_CONFIG_PATH
-        self.config_data = {}
-
-    def load(self) -> dict:
-        if not os.path.exists(self.config_path):
-            self.create(port=5555, protocol='vless')
-
-        with open(self.config_path, 'r') as f:
-            self.config_data = json.load(f)
-
-        return self.config_data
-
-    def save(self, config_data: dict) -> None:
-        with open(self.config_path, 'w') as f:
-            json.dump(config_data, f, indent=4)
-
-    def create(self, port: int, protocol: str) -> None:
-        v2ray_config_template['inbounds'][0]['port'] = port
-        v2ray_config_template['inbounds'][0]['protocol'] = protocol
-        self.save(v2ray_config_template)
-
-
-class V2RayManager:
-    def __init__(self) -> None:
-        self.config = V2RayConfig()
-
-    @staticmethod
-    def install() -> bool:
-        cmd = V2RAY_CMD_INSTALL
-        status = os.system(cmd) == 0
-
-        if status:
-            V2RayConfig().create(port=5555, protocol='vless')
-            V2RayManager.restart()
-
-        return status
-
-    @staticmethod
-    def uninstall() -> bool:
-        os.system('rm -rf /etc/v2ray')
-        os.system('rm -rf /usr/bin/v2ray/')
-
-        V2RayManager.stop()
-
-        return not V2RayManager.is_installed()
-
-    @staticmethod
-    def is_installed() -> bool:
-        return os.path.exists('/usr/bin/v2ray/v2ray')
-
-    @staticmethod
-    def is_running() -> bool:
-        cmd = 'ps -ef | grep v2ray | grep -v grep'
-        return os.system(cmd) == 0
-
-    @staticmethod
-    def start() -> bool:
-        cmd = 'systemctl start v2ray'
-        return os.system(cmd) == 0
-
-    @staticmethod
-    def stop() -> bool:
-        cmd = 'systemctl stop v2ray'
-        return os.system(cmd) == 0
-
-    @staticmethod
-    def restart() -> bool:
-        cmd = 'systemctl restart v2ray'
-        return os.system(cmd) == 0
-
-    def get_running_port(self) -> int:
-        config_data = self.config.load()
-        return config_data['inbounds'][0]['port']
-
-    def change_port(self, port: int) -> bool:
-        config_data = self.config.load()
-        config_data['inbounds'][0]['port'] = port
-
-        self.config.save(config_data)
-        self.restart()
-
-        return self.is_running()
-
-    def create_new_uuid(self) -> str:
-        config_data = self.config.load()
-        uuid = create_uuid()
-
-        config_data['inbounds'][0]['settings']['clients'].append(
-            {
-                'id': uuid,
-                'flow': 'xtls-rprx-direct',
-            }
-        )
-
-        self.config.save(config_data)
-        self.restart()
-        return uuid
-
-    def remove_uuid(self, uuid: str) -> None:
-        config_data = self.config.load()
-        config_data['inbounds'][0]['settings']['clients'] = [
-            client
-            for client in config_data['inbounds'][0]['settings']['clients']
-            if client['id'] != uuid
-        ]
-
-        self.config.save(config_data)
-        self.restart()
-
-    def get_uuid_list(self) -> t.List[str]:
-        config_data = self.config.load()
-        return [client['id'] for client in config_data['inbounds'][0]['settings']['clients']]
+from .utils import ConsoleUUID, UserMenuConsole
+from .v2ray_utils import V2RayManager
 
 
 class V2RayActions:
@@ -255,7 +124,26 @@ class V2RayActions:
         uuid = v2ray_manager.create_new_uuid()
         logger.info('UUID criado: %s' % uuid)
 
-        Console.pause()
+        result = input(
+            COLOR_NAME.YELLOW + 'Deseja associar este UUID ao usuário? (s/n): ' + COLOR_NAME.RESET
+        )
+        if result.lower() == 's':
+            user_use_case = UserUseCase(UserRepository())
+
+            console = UserMenuConsole(user_use_case)
+            console.show()
+
+            if console._user_selected is not None:
+                user_dto = UserDto.of(console._user_selected)
+                user_dto.v2ray_uuid = uuid
+
+                user_use_case.update(user_dto)
+                message = COLOR_NAME.YELLOW + 'Usuário: %s' % user_dto.username + COLOR_NAME.RESET
+                message += '\n' + COLOR_NAME.YELLOW + 'UUID: %s' % uuid + COLOR_NAME.RESET
+                print(message)
+
+                logger.info('UUID associado com sucesso!')
+                Console.pause()
 
     @staticmethod
     def remove_uuid(uuid: str = None) -> None:
@@ -270,6 +158,14 @@ class V2RayActions:
             return
 
         v2ray_manager.remove_uuid(uuid)
+
+        user_use_case = UserUseCase(UserRepository())
+        user_dto = user_use_case.get_by_uuid(uuid)
+
+        if user_dto:
+            user_dto.v2ray_uuid = None
+            user_use_case.update(user_dto)
+
         logger.info('UUID removido: %s' % uuid)
 
         Console.pause()
@@ -310,32 +206,27 @@ class V2RayActions:
         Console.pause()
 
 
-class ConsoleUUID:
-    def __init__(self, title: str = 'V2Ray UUID') -> None:
-        self.title = title
-        self.console = Console(title=self.title)
-        self.v2ray_manager = V2RayManager()
-
-    def select_uuid(self, uuid: str) -> None:
-        raise NotImplementedError
+class ConsoleDeleteUUID(ConsoleUUID):
+    def __init__(self, v2ray_manager: V2RayManager) -> None:
+        super().__init__('Remover UUID', v2ray_manager)
 
     def create_items(self) -> None:
-        uuids = self.v2ray_manager.get_uuid_list()
-        if not uuids:
+        user_use_case = UserUseCase(UserRepository())
+        uuid_list = self.v2ray_manager.get_uuid_list()
+
+        if not uuid_list:
             logger.error('Nenhum UUID encontrado')
+            Console.pause()
             return
 
-        for uuid in uuids:
-            self.console.append_item(FuncItem(uuid, self.select_uuid, uuid))
+        for uuid in uuid_list:
+            user_dto = user_use_case.get_by_uuid(uuid)
+            text = '%s' % uuid
 
-    def start(self) -> None:
-        self.create_items()
-        self.console.show()
+            if user_dto:
+                text += ' - %s' % user_dto.username
 
-
-class ConsoleDeleteUUID(ConsoleUUID):
-    def __init__(self) -> None:
-        super().__init__('Remover UUID')
+            self.console.append_item(FuncItem(text, self.select_uuid, uuid))
 
     def select_uuid(self, uuid: str) -> None:
         V2RayActions.remove_uuid(uuid)
@@ -345,8 +236,8 @@ class ConsoleDeleteUUID(ConsoleUUID):
 
 
 class ConsoleListUUID(ConsoleUUID):
-    def __init__(self) -> None:
-        super().__init__('UUID\'s Atuais')
+    def __init__(self, v2ray_manager: V2RayManager) -> None:
+        super().__init__('Listar UUIDs', v2ray_manager)
 
     def start(self) -> None:
         self.create_items()
@@ -354,35 +245,40 @@ class ConsoleListUUID(ConsoleUUID):
         if len(self.console.items) > 1:
             del self.console.items[-1]
 
+        self.console.clear_screen()
         self.console.print_items()
         self.console.pause()
 
 
 def v2ray_console_main():
     console = Console('V2Ray Manager')
-    actions = V2RayActions()
+    action = V2RayActions()
 
     def console_callback(is_restart) -> None:
         if is_restart:
             console.exit()
             v2ray_console_main()
 
-    if not actions.v2ray_manager.is_installed():
-        console.append_item(FuncItem('INSTALAR V2RAY', actions.install, console_callback))
+    if not action.v2ray_manager.is_installed():
+        console.append_item(FuncItem('INSTALAR V2RAY', action.install, console_callback))
         console.show()
         return
 
     if not V2RayManager.is_running():
-        console.append_item(FuncItem('INICIAR V2RAY', actions.start, console_callback))
+        console.append_item(FuncItem('INICIAR V2RAY', action.start, console_callback))
 
     if V2RayManager.is_running():
-        console.append_item(FuncItem('PARAR V2RAY', actions.stop, console_callback))
-        console.append_item(FuncItem('REINICIAR V2RAY', actions.restart, console_callback))
+        console.append_item(FuncItem('PARAR V2RAY', action.stop, console_callback))
+        console.append_item(FuncItem('REINICIAR V2RAY', action.restart, console_callback))
 
-    console.append_item(FuncItem('ALTERAR PORTA', actions.change_port))
-    console.append_item(FuncItem('CRIAR NOVO UUID', actions.create_uuid))
-    console.append_item(FuncItem('REMOVER UUID', lambda: ConsoleDeleteUUID().start()))
-    console.append_item(FuncItem('LISTAR UUID\'S', lambda: ConsoleListUUID().start()))
-    console.append_item(FuncItem('VER CONFIG. V2RAY', actions.view_vless_config))
-    console.append_item(FuncItem('DESINSTALAR V2RAY', actions.uninstall, console_callback))
+    console.append_item(FuncItem('ALTERAR PORTA', action.change_port))
+    console.append_item(FuncItem('CRIAR NOVO UUID', action.create_uuid))
+    console.append_item(
+        FuncItem('REMOVER UUID', lambda: ConsoleDeleteUUID(action.v2ray_manager).start())
+    )
+    console.append_item(
+        FuncItem('LISTAR UUID\'S', lambda: ConsoleListUUID(action.v2ray_manager).start())
+    )
+    console.append_item(FuncItem('VER CONFIG. V2RAY', action.view_vless_config))
+    console.append_item(FuncItem('DESINSTALAR V2RAY', action.uninstall, console_callback))
     console.show()

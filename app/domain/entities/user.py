@@ -11,6 +11,8 @@ class User(BaseEntity):
     connection_limit = Column(Integer, nullable=False)
     expiration_date = Column(DateTime, nullable=False)
 
+    v2ray_uuid = Column(String(50), nullable=True)
+
     def __str__(self) -> str:
         return f'{self.id} - {self.username}'
 

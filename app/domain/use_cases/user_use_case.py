@@ -29,11 +29,15 @@ class UserUseCase:
 
     def get_by_id(self, id: int) -> t.Optional[UserDto]:
         data = self.user_repository.get_by_id(id)
-        return UserDto.of(data.to_dict())
+        return UserDto.of(data.to_dict()) if data else None
 
     def get_by_username(self, username: str) -> t.Optional[UserDto]:
         data = self.user_repository.get_by_username(username)
-        return UserDto.of(data.to_dict())
+        return UserDto.of(data.to_dict()) if data else None
+
+    def get_by_uuid(self, uuid: str) -> t.Optional[UserDto]:
+        data = self.user_repository.get_by_uuid(uuid)
+        return UserDto.of(data.to_dict()) if data else None
 
     def get_all(self) -> t.List[UserDto]:
         data = self.user_repository.get_all()
