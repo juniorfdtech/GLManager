@@ -276,6 +276,15 @@ class V2RayActions:
         Console.pause()
 
 
+    @staticmethod
+    def view_vless_config() -> None:
+        vless_link = 'vless://@{}?{}'
+        
+        config = V2RayActions.v2ray_manager.config.load()
+        type = config['inbounds'][1]['streamSettings']['network']
+        port = config['inbounds'][1]['port']
+        
+
 class ConsoleUUID:
     def __init__(self, title: str = 'V2Ray UUID') -> None:
         self.title = title
