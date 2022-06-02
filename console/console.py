@@ -24,6 +24,7 @@ class Console:
     def append_item(self, item):
         if self.items:
             del self.items[-1]
+
         self.items.append(item)
         if self.exit_item:
             self.items.append(self.exit_item)
@@ -57,10 +58,13 @@ class Console:
         if -1 < num < len(self.items):
             self.select(num - 1)
 
+    def print_items(self):
+        print(self.formatter.formatter(self.items, self.title))
+
     def show(self):
         while not self.selected_exit and self.items[:-1] and not self._exit:
             self.clear_screen()
-            print(self.formatter.formatter(self.items, self.title))
+            self.print_items()
             self.process_user_input()
 
     def exit(self):

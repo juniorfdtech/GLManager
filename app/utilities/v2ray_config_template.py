@@ -48,7 +48,7 @@ config_string = '''
       "settings": {
         "clients": [
           {
-            "id": "69a3eed2-8c05-4059-9f48-c1f730e93c52",
+            "id": "",
             "flow": "xtls-rprx-direct"
           }
         ],

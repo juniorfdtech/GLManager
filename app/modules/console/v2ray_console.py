@@ -15,11 +15,17 @@ V2RAY_CMD_INSTALL = 'bash -c \'bash <(curl -L -s https://multi.netlify.app/go.sh
 V2RAY_CONFIG_PATH = '/etc/v2ray/config.json'
 
 
-def create_uuid(name: str = time.time()) -> str:
-    if not isinstance(name, str):
-        name = str(name)
+def create_uuid() -> str:
+    import hashlib, random, string
 
-    return str(uuid.uuid5(uuid.NAMESPACE_DNS, name))
+    string_pool = string.ascii_letters + string.digits
+    data = ''.join(random.choice(string_pool) for _ in range(32))
+    data += str(int(time.time()))
+    data += str(uuid.getnode())
+
+    hash_data = hashlib.sha256(data.encode('utf-8')).hexdigest()
+
+    return str(uuid.uuid5(uuid.NAMESPACE_DNS, hash_data))
 
 
 class V2RayConfig:
@@ -43,6 +49,7 @@ class V2RayConfig:
     def create(self, port: int, protocol: str) -> None:
         v2ray_config_template['inbounds'][1]['port'] = port
         v2ray_config_template['inbounds'][1]['protocol'] = protocol
+        v2ray_config_template['inbounds'][1]['settings']['clients']['id'] = create_uuid()
         self.save(v2ray_config_template)
 
 
@@ -107,9 +114,9 @@ class V2RayManager:
 
         return self.is_running()
 
-    def create_new_uuid(self, name: str = time.time()) -> str:
+    def create_new_uuid(self) -> str:
         config_data = self.config.load()
-        uuid = create_uuid(name)
+        uuid = create_uuid()
 
         config_data['inbounds'][1]['settings']['clients'].append(
             {
@@ -145,8 +152,10 @@ class V2RayActions:
     def install(callback: t.Callable) -> None:
         logger.info('Instalando V2Ray...')
         status = V2RayActions.v2ray_manager.install()
+        current_uuid = V2RayActions.v2ray_manager.get_uuid_list()[0]
 
         if status:
+            logger.info('UUID: {}'.format(COLOR_NAME.GREEN + current_uuid + COLOR_NAME.END))
             logger.info('V2Ray instalado com sucesso!')
         else:
             logger.error('Falha ao instalar V2Ray!')
@@ -211,7 +220,7 @@ class V2RayActions:
         v2ray_manager = V2RayActions.v2ray_manager
 
         current_port = v2ray_manager.get_running_port()
-        logger.info(f'Porta atual: {current_port}')
+        logger.info('Porta atual: %s' % current_port)
 
         try:
             port = None
@@ -232,7 +241,7 @@ class V2RayActions:
                     port = None
 
             if v2ray_manager.change_port(port):
-                logger.info(f'Porta alterada para {port}')
+                logger.info('Porta alterada para %s' % port)
             else:
                 logger.error('Falha ao alterar porta!')
 
@@ -245,40 +254,74 @@ class V2RayActions:
     def create_uuid() -> None:
         v2ray_manager = V2RayActions.v2ray_manager
         uuid = v2ray_manager.create_new_uuid()
-        logger.info(f'UUID criado: {uuid}')
+        logger.info('UUID criado: %s' % uuid)
 
         Console.pause()
 
     @staticmethod
-    def remove_uuid() -> None:
-        v2ray_manager = V2RayActions.v2ray_manager
-        uuid_list = v2ray_manager.get_uuid_list()
-        logger.info(f'UUIDs disponíveis: {uuid_list}')
-
-        try:
-            uuid = None
-            while uuid is None:
-                uuid = input(COLOR_NAME.YELLOW + 'UUID: ' + COLOR_NAME.RESET)
-
-                if uuid not in uuid_list:
-                    logger.error('UUID inválido!')
-                    uuid = None
-
-            v2ray_manager.remove_uuid(uuid)
-            logger.info(f'UUID removido: {uuid}')
-
-        except KeyboardInterrupt:
+    def remove_uuid(uuid: str = None) -> None:
+        if uuid is None:
             return
 
-        Console.pause()
-
-    @staticmethod
-    def get_uuid_list() -> None:
         v2ray_manager = V2RayActions.v2ray_manager
         uuid_list = v2ray_manager.get_uuid_list()
-        logger.info(f'UUIDs disponíveis: {uuid_list}')
+
+        if uuid not in uuid_list:
+            logger.error('UUID não encontrado!')
+            return
+
+        v2ray_manager.remove_uuid(uuid)
+        logger.info('UUID removido: %s' % uuid)
 
         Console.pause()
+
+
+class ConsoleUUID:
+    def __init__(self, title: str = 'V2Ray UUID') -> None:
+        self.title = title
+        self.console = Console(title=self.title)
+        self.v2ray_manager = V2RayManager()
+
+    def select_uuid(self, uuid: str) -> None:
+        raise NotImplementedError
+
+    def create_items(self) -> None:
+        uuids = self.v2ray_manager.get_uuid_list()
+        if not uuids:
+            logger.error('Nenhum UUID encontrado')
+            return
+
+        for uuid in uuids:
+            self.console.append_item(FuncItem(uuid, self.select_uuid, uuid))
+
+    def start(self) -> None:
+        self.create_items()
+        self.console.show()
+
+
+class ConsoleDeleteUUID(ConsoleUUID):
+    def __init__(self) -> None:
+        super().__init__('Remover UUID')
+
+    def select_uuid(self, uuid: str) -> None:
+        V2RayActions.remove_uuid(uuid)
+
+        self.console.items.clear()
+        self.create_items()
+
+
+class ConsoleListUUID(ConsoleUUID):
+    def __init__(self) -> None:
+        super().__init__('UUID\'s Atuais')
+
+    def start(self) -> None:
+        self.create_items()
+
+        if len(self.console.items) > 1:
+            del self.console.items[-1]
+
+        self.console.print_items()
+        self.console.pause()
 
 
 def v2ray_console_main():
@@ -304,8 +347,7 @@ def v2ray_console_main():
 
     console.append_item(FuncItem('ALTERAR PORTA', actions.change_port))
     console.append_item(FuncItem('CRIAR NOVO UUID', actions.create_uuid))
-    console.append_item(FuncItem('REMOVER UUID', actions.remove_uuid))
-    console.append_item(FuncItem('LISTAR UUID\'S', actions.get_uuid_list))
-
+    console.append_item(FuncItem('REMOVER UUID', lambda: ConsoleDeleteUUID().start()))
+    console.append_item(FuncItem('LISTAR UUID\'S', lambda: ConsoleListUUID().start()))
     console.append_item(FuncItem('DESINSTALAR V2RAY', actions.uninstall, console_callback))
     console.show()
