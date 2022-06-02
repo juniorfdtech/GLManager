@@ -426,6 +426,11 @@ class UserAction:
     def monitor_action() -> None:
         users = UserUseCase(UserRepository()).get_all()
 
+        if not users:
+            logger.error('Nenhum usuario foi encontrado.')
+            Console.pause()
+            return
+
         width = max(len(user['username']) for user in users)
         width_username = width if width > 7 else 7
 
