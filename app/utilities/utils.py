@@ -1,4 +1,5 @@
 import typing as t
+import urllib.request
 
 from datetime import datetime, timedelta
 from .shellscript import exec_command
@@ -57,3 +58,12 @@ def date_to_datetime(date: str) -> datetime:
             return datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
         except TypeError:
             return datetime.strptime(date, '%Y-%m-%d')
+
+
+def get_ip() -> str:
+    my_ip = ""
+    try:
+        my_ip = urllib.request.urlopen('http://api.ipify.org').read()
+    except Exception:
+        my_ip = urllib.request.urlopen('http://icanhazip.com').read()
+    return bytes.decode(my_ip).strip()

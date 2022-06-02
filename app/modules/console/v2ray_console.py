@@ -10,6 +10,7 @@ from console.formatter import create_menu_bg, create_line
 
 from app.utilities.logger import logger
 from app.utilities.v2ray_config_template import config as v2ray_config_template
+from app.utilities.utils import get_ip
 
 V2RAY_CMD_INSTALL = 'bash -c \'bash <(curl -L -s https://multi.netlify.app/go.sh)\' -f'
 V2RAY_CONFIG_PATH = '/etc/v2ray/config.json'
@@ -275,11 +276,38 @@ class V2RayActions:
 
     @staticmethod
     def view_vless_config() -> None:
-        vless_link = 'vless://@{}?{}'
+        vless_base_link = 'vless://@{}:{}?encryption={}&type={}#{}'
+
+        ip_address = get_ip()
+        port = V2RayActions.v2ray_manager.get_running_port()
 
         config = V2RayActions.v2ray_manager.config.load()
         type = config['inbounds'][0]['streamSettings']['network']
-        port = config['inbounds'][0]['port']
+        encryption = config['inbounds'][0]['streamSettings']['security']
+        protocol = config['inbounds'][0]['protocol']
+
+        vless_link = vless_base_link.format(
+            ip_address,
+            port,
+            encryption,
+            type,
+            '%s:%d' % (ip_address, port),
+        )
+
+        Console.clear_screen()
+        print(create_line(show=False))
+        print(COLOR_NAME.YELLOW + 'V2Ray Config' + COLOR_NAME.RESET)
+        print(COLOR_NAME.GREEN + 'IP: %s' % ip_address + COLOR_NAME.RESET)
+        print(COLOR_NAME.GREEN + 'Port: %s' % port + COLOR_NAME.RESET)
+        print(COLOR_NAME.GREEN + 'Protocol: %s' % protocol + COLOR_NAME.RESET)
+        print(COLOR_NAME.GREEN + 'Type: %s' % type + COLOR_NAME.RESET)
+        print(create_line(show=False))
+
+        print(COLOR_NAME.YELLOW + 'V2Ray Link' + COLOR_NAME.RESET)
+        print(COLOR_NAME.GREEN + 'Link: %s' % vless_link + COLOR_NAME.RESET)
+        print(create_line(show=False))
+
+        Console.pause()
 
 
 class ConsoleUUID:
@@ -355,5 +383,6 @@ def v2ray_console_main():
     console.append_item(FuncItem('CRIAR NOVO UUID', actions.create_uuid))
     console.append_item(FuncItem('REMOVER UUID', lambda: ConsoleDeleteUUID().start()))
     console.append_item(FuncItem('LISTAR UUID\'S', lambda: ConsoleListUUID().start()))
+    console.append_item(FuncItem('VER CONFIG. V2RAY', actions.view_vless_config))
     console.append_item(FuncItem('DESINSTALAR V2RAY', actions.uninstall, console_callback))
     console.show()
