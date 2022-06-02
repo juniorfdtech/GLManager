@@ -57,7 +57,7 @@ config_string = '''
       },
       "streamSettings": {
         "network": "tcp",
-        "security": "none",
+        "security": "none"
       },
       "tag": "inbound-5555",
       "sniffing": {
