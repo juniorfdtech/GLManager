@@ -111,7 +111,7 @@ def openvpn_console_main() -> None:
             console.exit()
             openvpn_console_main()
 
-    if not OpenVPNManager.openvpn_is_installed():
+    if not OpenVPNManager.ovpn_utils.openvpn_is_installed():
         console.append_item(
             FuncItem(
                 'INSTALAR OPENVPN',
@@ -121,7 +121,7 @@ def openvpn_console_main() -> None:
         console.show()
         return
 
-    if OpenVPNManager.openvpn_is_running():
+    if OpenVPNManager.ovpn_utils.openvpn_is_running():
         console.append_item(
             FuncItem(
                 'PARAR OPENVPN',
