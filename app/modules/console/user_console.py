@@ -331,8 +331,7 @@ class UserAction:
         user_manager = UserManager(user_input_data, UserUseCase(UserRepository()))
 
         try:
-            data = user_manager.create_user()
-
+            data = user_input_data.to_dict()
             if OpenVPNUtils.openvpn_is_installed():
                 result = input(
                     COLOR_NAME.YELLOW + 'Deseja gerar um arquivo OVPN? (s/N) ' + COLOR_NAME.RESET
@@ -341,6 +340,7 @@ class UserAction:
                     path = OpenVPNUtils.create_ovpn_client(data['username'])
                     data['ovpn_path'] = path
 
+            user_manager.create_user()
             user_manager.show_message_user_created(data)
         except Exception as e:
             logger.error(e)
