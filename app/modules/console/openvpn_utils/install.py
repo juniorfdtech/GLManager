@@ -225,27 +225,27 @@ def build_easyrsa() -> None:
 
     os.system('chown -R root:root %s' % EASYRSA_PATH)
 
-    os.chdir(EASYRSA_PATH)
+    easyrsa = os.path.join(EASYRSA_PATH, 'easyrsa')
 
-    os.system('bash -c "./easyrsa init-pki 1>/dev/null 2>&1"')
-    os.system('bash -c "./easyrsa --batch build-ca nopass 1>/dev/null 2>&1"')
-    os.system('bash -c "./easyrsa gen-dh 1>/dev/null 2>&1"')
-    os.system('bash -c "./easyrsa build-server-full server nopass 1>/dev/null 2>&1"')
-    os.system('bash -c "./easyrsa build-client-full GLTUNNEL nopass 1>/dev/null 2>&1"')
-    os.system('bash -c "./easyrsa gen-crl 1>/dev/null 2>&1"')
+    os.system('bash -c "%s init-pki 1>/dev/null 2>&1"' % easyrsa)
+    os.system('bash -c "%s --batch build-ca nopass 1>/dev/null 2>&1"' % easyrsa)
+    os.system('bash -c "%s gen-dh 1>/dev/null 2>&1"')
+    os.system('bash -c "%s build-server-full server nopass 1>/dev/null 2>&1"' % easyrsa)
+    os.system('bash -c "%s build-client-full GLTUNNEL nopass 1>/dev/null 2>&1"' % easyrsa)
+    os.system('bash -c "%s gen-crl 1>/dev/null 2>&1"' % easyrsa)
 
     os.system(
         'cp pki/ca.crt pki/private/ca.key pki/dh.pem pki/issued/server.crt pki/private/server.key /etc/openvpn/easy-rsa/pki/crl.pem /etc/openvpn'
     )
-    os.system('chown -R nobody:nogroup /etc/openvpn/crl.pem 1>/dev/null 2>&1')
-    os.system('openvpn --genkey --secret /etc/openvpn/ta.key 1>/dev/null 2>&1')
+    os.system('chown -R nobody:nogroup %s 1>/dev/null 2>&1' % os.path.join(OPENVPN_PATH, 'crl.pem'))
+    os.system(
+        'openvpn --genkey --secret %s 1>/dev/null 2>&1' % os.path.join(OPENVPN_PATH, 'ta.key')
+    )
 
 
 def build_server_config(port: int, protocol: str, dns: str) -> None:
-    os.chdir(OPENVPN_PATH)
-
     config_file = 'server.conf'
-    with open(config_file, 'w') as f:
+    with open(os.path.join(OPENVPN_PATH, config_file), 'w') as f:
         f.write(
             '\n'.join(
                 [
