@@ -334,7 +334,9 @@ class UserAction:
             data = user_manager.create_user()
 
             if OpenVPNUtils.openvpn_is_installed():
-                result = input('Deseja gerar ovpn para o usuário? [S/N] ')
+                result = input(
+                    COLOR_NAME.YELLOW + 'Deseja gerar um arquivo OVPN? (s/N) ' + COLOR_NAME.RESET
+                )
                 if result.lower() == 's':
                     path = OpenVPNUtils.create_ovpn_client(data['username'])
                     data['ovpn_path'] = path
