@@ -98,7 +98,7 @@ class UserInputData:
 
     @property
     def v2ray_uuid(self):
-        while not self._v2ray_uuid and V2rayUtils.v2ray_is_installed():
+        while self._v2ray_uuid is None and V2rayUtils.v2ray_is_installed():
             self._v2ray_uuid = input(
                 COLOR_NAME.YELLOW + 'Você deseja criar um UUID? (s/n) ' + COLOR_NAME.RESET
             )
@@ -106,8 +106,7 @@ class UserInputData:
                 self._v2ray_uuid = V2rayUtils.create_uuid()
 
             if self._v2ray_uuid == 'n':
-                self._v2ray_uuid = None
-                break
+                self._v2ray_uuid = ''
 
         return self._v2ray_uuid
 
