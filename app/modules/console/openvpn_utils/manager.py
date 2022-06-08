@@ -28,17 +28,17 @@ class OpenVPNManager:
     @staticmethod
     def openvpn_start() -> bool:
         os.system('systemctl start openvpn@server.service')
-        return OpenVPNManager.openvpn_is_running()
+        return OpenVPNManager.ovpn_utils.openvpn_is_running()
 
     @staticmethod
     def openvpn_stop() -> bool:
         os.system('systemctl stop openvpn@server.service')
-        return not OpenVPNManager.openvpn_is_running()
+        return not OpenVPNManager.ovpn_utils.openvpn_is_running()
 
     @staticmethod
     def openvpn_restart() -> bool:
         os.system('systemctl restart openvpn@server.service')
-        return OpenVPNManager.openvpn_is_running()
+        return OpenVPNManager.ovpn_utils.openvpn_is_running()
 
     @staticmethod
     def change_openvpn_port(port: int) -> None:
