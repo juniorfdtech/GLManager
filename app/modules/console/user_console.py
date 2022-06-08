@@ -104,8 +104,10 @@ class UserInputData:
             )
             if self._v2ray_uuid == 's':
                 self._v2ray_uuid = V2rayUtils.create_uuid()
-            else:
+
+            if self._v2ray_uuid == 'n':
                 self._v2ray_uuid = None
+                break
 
         return self._v2ray_uuid
 
