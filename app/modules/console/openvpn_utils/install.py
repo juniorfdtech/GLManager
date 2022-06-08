@@ -14,7 +14,7 @@ EASYRSA_PATH = os.path.join(OPENVPN_PATH, 'easy-rsa')
 EASYRSA_PKI_PATH = os.path.join(EASYRSA_PATH, 'pki')
 
 EASYRSA_PKI_CA = os.path.join(EASYRSA_PKI_PATH, 'ca.crt')
-EASYRSA_PKI_TLS = os.path.join(OPENVPN_PATH, 'ta.key')
+EASYRSA_TLS_CRYPT = os.path.join(OPENVPN_PATH, 'tls-crypt.key')
 
 EASYRSA_PKI_CERT_PATH = os.path.join(EASYRSA_PKI_PATH, 'issued/')
 EASYRSA_PKI_KEY_PATH = os.path.join(EASYRSA_PKI_PATH, 'private/')
@@ -251,7 +251,7 @@ def build_easyrsa() -> None:
     )
 
     os.system('chown -R nobody:nogroup %s >/dev/null' % os.path.join(OPENVPN_PATH, 'crl.pem'))
-    os.system('openvpn --genkey --secret %s >/dev/null' % os.path.join(OPENVPN_PATH, 'ta.key'))
+    os.system('openvpn --genkey --secret %s >/dev/null' % EASYRSA_TLS_CRYPT)
     os.chdir(CURRENT_PATH)
 
 
