@@ -68,7 +68,8 @@ class OpenVPNActions:
         Console.pause()
         callback(status)
 
-    def restart(self, callback: t.Callable) -> None:
+    @staticmethod
+    def restart(callback: t.Callable) -> None:
         logger.info('Reiniciando OpenVPN...')
         status = OpenVPNActions.openvpn_manager.openvpn_restart()
 
@@ -79,6 +80,28 @@ class OpenVPNActions:
 
         Console.pause()
         callback(status)
+
+    @staticmethod
+    def change_port():
+        current_port = OpenVPNActions.openvpn_manager.get_current_port()
+        logger.info('Porta atual: {}'.format(current_port))
+
+        port = None
+        while not port:
+            port = input('Porta: ')
+
+            try:
+                port = int(port)
+                if port < 1 or port > 65535:
+                    raise ValueError
+            except ValueError:
+                logger.error('Porta inválida!')
+                port = None
+
+        OpenVPNActions.openvpn_manager.change_openvpn_port(port)
+        OpenVPNActions.openvpn_manager.openvpn_restart()
+        logger.info('Porta alterada para {}!'.format(port))
+        Console.pause()
 
 
 def openvpn_console_main() -> None:
@@ -119,6 +142,13 @@ def openvpn_console_main() -> None:
             func=lambda: OpenVPNActions.restart(console_callback),
         )
     )
+    console.append_item(
+        FuncItem(
+            'ALTERAR PORTA',
+            func=lambda: OpenVPNActions.change_port(),
+        )
+    )
+
     console.append_item(
         FuncItem(
             'DESINSTALAR OPENVPN',

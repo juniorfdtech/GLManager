@@ -49,3 +49,26 @@ class OpenVPNManager:
     def openvpn_restart() -> bool:
         os.system('systemctl restart openvpn@server.service')
         return OpenVPNManager.openvpn_is_running()
+
+    @staticmethod
+    def change_openvpn_port(port: int) -> None:
+        with open(os.path.join(OPENVPN_PATH, 'server.conf'), 'r') as f:
+            lines = f.readlines()
+
+        with open(os.path.join(OPENVPN_PATH, 'server.conf'), 'w') as f:
+            for line in lines:
+
+                if 'port' in line:
+                    line = 'port {}\n'.format(port)
+
+                f.write(line)
+
+    @staticmethod
+    def get_current_port() -> int:
+        with open(os.path.join(OPENVPN_PATH, 'server.conf'), 'r') as f:
+            lines = f.readlines()
+
+        for line in lines:
+            if 'port' in line:
+                port = int(line.split(' ')[1])
+                return port
