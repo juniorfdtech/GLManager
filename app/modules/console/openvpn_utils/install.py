@@ -414,7 +414,7 @@ def openvpn_install() -> None:
     build_rc_local()
     build_iptables(IP_ADDRESS, port, protocol)
     build_service_openvpn()
-    create_ovpn_client()
+    create_common_client_config(port, protocol)
 
 
 def uninstall_openvpn() -> None:
