@@ -35,11 +35,11 @@ def create_ovpn_client(username: str) -> str:
     )
 
     ovpn_config = ovpn_config_template % (
-        open(CLIENT_COMMON_CONFIG).read(),
-        open(EASYRSA_PKI_CA).read(),
-        open(EASYRSA_PKI_CERT_PATH + username + '.crt').read(),
-        open(EASYRSA_PKI_KEY_PATH + username + '.key').read(),
-        open(EASYRSA_PKI_TLS).read(),
+        open(CLIENT_COMMON_CONFIG).read().strip(),
+        open(EASYRSA_PKI_CA).read().strip(),
+        open(EASYRSA_PKI_CERT_PATH + username + '.crt').read().strip(),
+        open(EASYRSA_PKI_KEY_PATH + username + '.key').read().strip(),
+        open(EASYRSA_PKI_TLS).read().strip(),
     )
 
     path = os.path.join(ROOT_PATH, username + '.ovpn')

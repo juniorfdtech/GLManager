@@ -60,7 +60,7 @@ def create_common_client_config(port: int, protocol: str) -> None:
         f.write(
             '\n'.join(
                 [
-                    'client' 'dev tun',
+                    'client dev tun',
                     'proto %s' % protocol,
                     'sndbuf 0',
                     'rcvbuf 0',
