@@ -18,7 +18,6 @@ class OpenVPNActions:
 
     @staticmethod
     def install(callback: t.Callable) -> None:
-        logger.info('Instalando OpenVPN...')
         status = OpenVPNActions.openvpn_manager.openvpn_install()
 
         if status:

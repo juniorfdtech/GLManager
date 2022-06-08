@@ -396,6 +396,12 @@ def openvpn_install() -> None:
     protocol = protocol.lower()
     dns = dns.lower()
 
+    logger.info('Processo de instalação iniciado...')
+    logger.info('Por favor, aguarde...\n')
+    logger.info('Porta: %s' % port)
+    logger.info('Protocolo: %s' % protocol)
+    logger.info('DNS: %s' % dns)
+
     update_package()
     install_packages()
     setup_dir()
