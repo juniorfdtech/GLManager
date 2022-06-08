@@ -1,4 +1,5 @@
 import os
+import re
 
 from urllib.request import urlopen
 from console import Console, FuncItem, COLOR_NAME
@@ -22,30 +23,11 @@ CLIENT_COMMON_CONFIG = os.path.join(OPENVPN_PATH, 'client-common.txt')
 
 ROOT_PATH = os.path.expanduser('~')
 
-IP_ADDRESS = (
-    os.popen(
-        '|'.join(
-            [
-                'ip addr',
-                'grep \'inet\'',
-                'grep -v inet6',
-                'grep -vE \'127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\'',
-                'grep -o -E \'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\'',
-                'head -1',
-            ]
-        )
-    )
-    .read()
-    .strip()
-)
-
-IP_ADDRESS2 = urlopen('https://api.ipify.org').read().decode('utf8')
-
-if not IP_ADDRESS:
-    IP_ADDRESS = os.popen('hostname -I | cut -d\' \' -f1').read().strip()
-
-if IP_ADDRESS == IP_ADDRESS2:
-    IP_ADDRESS = IP_ADDRESS2
+IP_ADDRESS = re.findall(
+    r'^\s+inet\s+(\d+\.\d+\.\d+\.\d+)\/\d+.*scope\s+global.*$',
+    os.popen('ip -4 addr').read(),
+    re.MULTILINE,
+)[0]
 
 EASYRSA_VERSION = '3.1.0'
 EASYRSA_NAME = 'EasyRSA-%s.tgz' % EASYRSA_VERSION
@@ -85,6 +67,14 @@ def create_common_client_config(port: int, protocol: str) -> None:
 
 def confirm_ip_address() -> bool:
     global IP_ADDRESS
+
+    IP_ADDRESS2 = urlopen('https://api.ipify.org').read().decode('utf8')
+
+    if not IP_ADDRESS:
+        IP_ADDRESS = os.popen('hostname -I | cut -d\' \' -f1').read().strip()
+
+    if IP_ADDRESS == IP_ADDRESS2:
+        IP_ADDRESS = IP_ADDRESS2
 
     if not IP_ADDRESS:
         logger.error('Não foi possível encontrar o IP do servidor.')
@@ -387,9 +377,10 @@ def openvpn_install() -> None:
 
 
 def uninstall_openvpn() -> None:
-    os.system('rm -rf /etc/openvpn')
-    os.system('rm -rf /etc/openvpn/easy-rsa')
-    os.system('rm -rf /etc/openvpn/ipp.txt')
+    os.system('rm -rf %s' % OPENVPN_PATH)
+    os.system('rm -rf /usr/share/doc/openvpn*')
+    os.system('find /home/ -maxdepth 2 -name "*.ovpn" -delete')
+    os.system('find /root/ -maxdepth 1 -name "*.ovpn" -delete')
 
     if os.system('pgrep systemd-journal 1>/dev/null 2>&1') == 0:
         os.system('systemctl stop openvpn 1>/dev/null 2>&1')

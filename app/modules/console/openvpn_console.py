@@ -1,15 +1,7 @@
 import typing as t
 
-from console import Console, FuncItem, COLOR_NAME
-from console.formatter import create_menu_bg, create_line
-
+from console import Console, FuncItem
 from app.utilities.logger import logger
-from app.utilities.utils import get_ip
-
-from app.data.repositories import UserRepository
-from app.domain.use_cases import UserUseCase
-from app.domain.dtos import UserDto
-
 from .openvpn_utils import OpenVPNManager
 
 
