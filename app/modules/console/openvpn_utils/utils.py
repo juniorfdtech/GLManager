@@ -6,7 +6,7 @@ from .install import (
     EASYRSA_PKI_CERT_PATH,
     EASYRSA_PKI_KEY_PATH,
     CLIENT_COMMON_CONFIG,
-    EASYRSA_PKI_TLS,
+    EASYRSA_TLS_CRYPT,
     ROOT_PATH,
     OPENVPN_PATH,
     CURRENT_PATH,
@@ -31,9 +31,9 @@ def create_ovpn_client(username: str) -> str:
             '<key>',
             '%s',
             '</key>',
-            '<tls-auth>',
+            '<tls-crypt>',
             '%s',
-            '</tls-auth>',
+            '</tls-crypt>',
         ]
     )
 
@@ -42,7 +42,7 @@ def create_ovpn_client(username: str) -> str:
         open(EASYRSA_PKI_CA).read().strip(),
         open(EASYRSA_PKI_CERT_PATH + username + '.crt').read().strip(),
         open(EASYRSA_PKI_KEY_PATH + username + '.key').read().strip(),
-        open(EASYRSA_PKI_TLS).read().strip(),
+        open(EASYRSA_TLS_CRYPT).read().strip(),
     )
 
     path = os.path.join(ROOT_PATH, username + '.ovpn')
