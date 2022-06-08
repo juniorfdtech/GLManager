@@ -9,9 +9,13 @@ class OpenVPNManager:
 
     @staticmethod
     def openvpn_is_installed() -> bool:
-        status = os.path.exists(OPENVPN_PATH) and os.path.exists(
-            os.path.join(OPENVPN_PATH, 'server.conf')
-        )
+        status = OpenVPNManager.openvpn_is_running()
+
+        if not status:
+            status = os.path.exists(OPENVPN_PATH) and os.path.exists(
+                os.path.join(OPENVPN_PATH, 'server.conf')
+            )
+
         return status
 
     @staticmethod

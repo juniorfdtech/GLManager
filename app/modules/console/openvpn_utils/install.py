@@ -400,7 +400,9 @@ def openvpn_install() -> None:
     logger.info('Por favor, aguarde...\n')
     logger.info('Porta: %s' % port)
     logger.info('Protocolo: %s' % protocol)
-    logger.info('DNS: %s' % dns)
+    logger.info(
+        'DNS: %s' % ' '.join([line.split()[3].replace('"', '') for line in dns.split('\n')])
+    )
 
     update_package()
     install_packages()
