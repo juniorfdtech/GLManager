@@ -8,13 +8,6 @@ from ..utils import logger
 
 RCLOCAL = '/etc/rc.local'
 
-if not os.path.exists(RCLOCAL):
-    RCLOCAL = '/etc/rc.d/rc.local'
-
-    if not os.path.exists(RCLOCAL):
-        logger.error('Não foi possível encontrar o arquivo de inicialização do OpenVPN.')
-        exit(1)
-
 OPENVPN_PATH = '/etc/openvpn'
 EASYRSA_PATH = os.path.join(OPENVPN_PATH, 'easy-rsa')
 EASYRSA_PKI_PATH = os.path.join(EASYRSA_PATH, 'easy-rsa/pki')
