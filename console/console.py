@@ -51,10 +51,12 @@ class Console:
 
     def process_user_input(self):
         user_input = self.user_input()
+
         try:
             num = int(user_input)
         except:
             return
+
         if -1 < num < len(self.items):
             self.select(num - 1)
 
@@ -133,8 +135,8 @@ class Item:
 
 
 class FuncItem(Item):
-    def __init__(self, text, func, *args):
-        super(FuncItem, self).__init__(text)
+    def __init__(self, text, func, *args, shuld_exit=False):
+        super(FuncItem, self).__init__(text, shuld_exit=shuld_exit)
         self.func = func
         self.args = args
 

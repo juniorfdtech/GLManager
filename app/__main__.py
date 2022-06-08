@@ -5,6 +5,7 @@ from app.modules.console import (
     user_console_main,
     socks_console_main,
     v2ray_console_main,
+    openvpn_console_main,
 )
 
 from console import Console, FuncItem
@@ -13,7 +14,7 @@ from console import Console, FuncItem
 def connection_choices():
     console = Console('GERENCIADOR DE CONEXÕES')
     console.append_item(FuncItem('SOCKS', socks_console_main))
-    console.append_item(FuncItem('OPENVPN', input))
+    console.append_item(FuncItem('OPENVPN', openvpn_console_main))
     console.append_item(FuncItem('V2RAY', v2ray_console_main))
     console.append_item(FuncItem('BADUDP', input))
 
