@@ -13,7 +13,7 @@ EASYRSA_PATH = os.path.join(OPENVPN_PATH, 'easy-rsa')
 EASYRSA_PKI_PATH = os.path.join(EASYRSA_PATH, 'pki')
 
 EASYRSA_PKI_CA = os.path.join(EASYRSA_PKI_PATH, 'ca.crt')
-EASYRSA_PKI_TLS = os.path.join(EASYRSA_PKI_PATH, 'ta.key')
+EASYRSA_PKI_TLS = os.path.join(OPENVPN_PATH, 'ta.key')
 
 EASYRSA_PKI_CERT_PATH = os.path.join(EASYRSA_PKI_PATH, 'issued/')
 EASYRSA_PKI_KEY_PATH = os.path.join(EASYRSA_PKI_PATH, 'private/')
