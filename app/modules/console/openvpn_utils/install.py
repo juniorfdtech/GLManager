@@ -36,6 +36,8 @@ EASYRSA_URL = 'https://github.com/OpenVPN/easy-rsa/releases/download/v%s/%s' % (
     EASYRSA_NAME,
 )
 
+CURRENT_PATH = os.getcwd()
+
 
 def create_common_client_config(port: int, protocol: str) -> None:
     with open(CLIENT_COMMON_CONFIG, 'w') as f:
@@ -226,6 +228,8 @@ def build_easyrsa() -> None:
     os.system('chown -R root:root %s' % EASYRSA_PATH)
 
     easyrsa = os.path.join(EASYRSA_PATH, 'easyrsa')
+    
+    os.chdir(EASYRSA_PATH)
 
     os.system('bash -c "%s init-pki 1>/dev/null 2>&1"' % easyrsa)
     os.system('bash -c "%s --batch build-ca nopass 1>/dev/null 2>&1"' % easyrsa)
@@ -241,6 +245,8 @@ def build_easyrsa() -> None:
     os.system(
         'openvpn --genkey --secret %s 1>/dev/null 2>&1' % os.path.join(OPENVPN_PATH, 'ta.key')
     )
+
+    os.chdir(CURRENT_PATH)
 
 
 def build_server_config(port: int, protocol: str, dns: str) -> None:
