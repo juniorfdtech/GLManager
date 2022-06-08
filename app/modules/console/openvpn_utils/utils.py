@@ -74,3 +74,13 @@ class OpenVPNUtils:
     @staticmethod
     def create_ovpn_client(username: str) -> str:
         return create_ovpn_client(username)
+
+    @staticmethod
+    def remove_ovpn_client(username: str) -> bool:
+        path = os.path.join(ROOT_PATH, username + '.ovpn')
+
+        if os.path.exists(path):
+            os.remove(path)
+            return True
+
+        return False

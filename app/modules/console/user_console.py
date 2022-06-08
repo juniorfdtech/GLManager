@@ -353,7 +353,11 @@ class UserAction:
 
         try:
             user_manager = UserManager(UserInputData.of(user_data), UserUseCase(UserRepository()))
-            user_manager.delete_user()
+            data = user_manager.delete_user()
+
+            if OpenVPNUtils.remove_ovpn_client(data['username']):
+                logger.info('Arquivo OVPN removido com sucesso.')
+
             logger.info('Usuário deletado com sucesso.')
         except Exception as e:
             logger.error(e)
