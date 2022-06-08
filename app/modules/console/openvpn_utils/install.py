@@ -388,3 +388,21 @@ def openvpn_install() -> None:
     build_iptables(IP_ADDRESS, port, protocol)
     build_service_openvpn()
     create_ovpn_client()
+
+
+def uninstall_openvpn() -> None:
+    os.system('rm -rf /etc/openvpn')
+    os.system('rm -rf /etc/openvpn/easy-rsa')
+    os.system('rm -rf /etc/openvpn/ipp.txt')
+
+    if os.system('pgrep systemd-journal') == 0:
+        os.system('systemctl stop openvpn')
+        os.system('systemctl disable openvpn')
+        os.system('systemctl daemon-reload')
+    else:
+        os.system('/etc/init.d/openvpn stop')
+        os.system('update-rc.d -f openvpn remove')
+
+    os.system('apt-get purge openvpn -y')
+    os.system('apt-get autoremove -y')
+    os.system('apt-get clean -y')
