@@ -220,7 +220,7 @@ def setup_dir() -> None:
 
 
 def download_easyrsa() -> None:
-    os.system('wget %s -O %s >/dev/null' % (EASYRSA_URL, EASYRSA_NAME))
+    os.system('wget %s -O %s -o /dev/null' % (EASYRSA_URL, EASYRSA_NAME))
 
 
 def build_easyrsa() -> None:
