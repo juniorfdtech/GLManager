@@ -393,6 +393,9 @@ def openvpn_install() -> None:
     if not port or not protocol or not dns:
         return
 
+    protocol = protocol.lower()
+    dns = dns.lower()
+
     update_package()
     install_packages()
     setup_dir()
