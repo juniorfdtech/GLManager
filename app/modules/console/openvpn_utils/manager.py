@@ -1,28 +1,17 @@
 import os
 
-from .install import openvpn_install, uninstall_openvpn, create_ovpn_client, OPENVPN_PATH
+from .install import openvpn_install, uninstall_openvpn, OPENVPN_PATH
+from .utils import OpenVPNUtils
 
 
 class OpenVPNManager:
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def openvpn_is_installed() -> bool:
-        status = OpenVPNManager.openvpn_is_running()
-
-        if not status:
-            status = os.path.exists(OPENVPN_PATH) and os.path.exists(
-                os.path.join(OPENVPN_PATH, 'server.conf')
-            )
-
-        return status
+    ovpn_utils = OpenVPNUtils()
 
     @staticmethod
     def openvpn_install() -> bool:
         try:
             openvpn_install()
-            return OpenVPNManager.openvpn_is_installed()
+            return OpenVPNManager.ovpn_utils.openvpn_is_installed()
         except (Exception, KeyboardInterrupt):
             return False
 
@@ -30,16 +19,11 @@ class OpenVPNManager:
     def openvpn_uninstall() -> bool:
         uninstall_openvpn()
 
-        return not OpenVPNManager.openvpn_is_installed()
+        return not OpenVPNManager.ovpn_utils.openvpn_is_installed()
 
     @staticmethod
     def create_ovpn_client(username: str) -> None:
-        create_ovpn_client(username)
-
-    @staticmethod
-    def openvpn_is_running() -> bool:
-        status = os.system('pgrep openvpn') == 0
-        return status
+        OpenVPNManager.ovpn_utils.create_ovpn_client(username)
 
     @staticmethod
     def openvpn_start() -> bool:

@@ -55,40 +55,6 @@ EASYRSA_URL = 'https://github.com/OpenVPN/easy-rsa/releases/download/v%s/%s' % (
 )
 
 
-def create_ovpn_client(username: str) -> None:
-    os.chdir(EASYRSA_PATH)
-    os.system('./easyrsa build-client-full %s nopass' % username)
-
-    ovpn_config_template = '\n'.join(
-        [
-            '%s',
-            '<ca>',
-            '%s',
-            '</ca>',
-            '<cert>',
-            '%s',
-            '</cert>',
-            '<key>',
-            '%s',
-            '</key>',
-            '<tls-auth>',
-            '%s',
-            '</tls-auth>',
-        ]
-    )
-
-    ovpn_config = ovpn_config_template % (
-        open(CLIENT_COMMON_CONFIG).read(),
-        open(EASYRSA_PKI_CA).read(),
-        open(EASYRSA_PKI_CERT_PATH + username + '.crt').read(),
-        open(EASYRSA_PKI_KEY_PATH + username + '.key').read(),
-        open(EASYRSA_PKI_TLS).read(),
-    )
-
-    with open(os.path.join(ROOT_PATH, username + '.ovpn'), 'w') as f:
-        f.write(ovpn_config)
-
-
 def create_common_client_config(port: int, protocol: str) -> None:
     with open(CLIENT_COMMON_CONFIG, 'w') as f:
         f.write(

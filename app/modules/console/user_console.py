@@ -15,6 +15,7 @@ from app.data.repositories import UserRepository
 from .utils import UserMenuConsole
 
 from .v2ray_utils import V2rayUtils
+from .openvpn_utils import OpenVPNUtils
 
 
 class UserInputData:
@@ -103,6 +104,8 @@ class UserInputData:
             )
             if self._v2ray_uuid == 's':
                 self._v2ray_uuid = V2rayUtils.create_uuid()
+            else:
+                self._v2ray_uuid = None
 
         return self._v2ray_uuid
 
@@ -236,6 +239,11 @@ class UserManager:
                 COLOR_NAME.YELLOW + 'UUID do V2Ray: ' + COLOR_NAME.RESET + user['v2ray_uuid'] + '\n'
             )
 
+        if user.get('ovpn_path') and user.get('ovpn_path').startswith('/'):
+            line += (
+                COLOR_NAME.YELLOW + 'Arquivo OVPN: ' + COLOR_NAME.RESET + user['ovpn_path'] + '\n'
+            )
+
         print(line)
 
 
@@ -322,6 +330,13 @@ class UserAction:
 
         try:
             data = user_manager.create_user()
+
+            if OpenVPNUtils.openvpn_is_installed():
+                result = input('Deseja gerar ovpn para o usuário? [S/N] ')
+                if result.lower() == 's':
+                    path = OpenVPNUtils.create_ovpn_client(data['username'])
+                    data['ovpn_path'] = path
+
             user_manager.show_message_user_created(data)
         except Exception as e:
             logger.error(e)
