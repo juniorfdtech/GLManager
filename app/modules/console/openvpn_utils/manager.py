@@ -16,9 +16,11 @@ class OpenVPNManager:
 
     @staticmethod
     def openvpn_install() -> bool:
-        openvpn_install()
-
-        return OpenVPNManager.openvpn_is_installed()
+        try:
+            openvpn_install()
+            return OpenVPNManager.openvpn_is_installed()
+        except (Exception, KeyboardInterrupt):
+            return False
 
     @staticmethod
     def openvpn_uninstall() -> bool:

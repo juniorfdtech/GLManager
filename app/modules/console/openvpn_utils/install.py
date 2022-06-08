@@ -118,11 +118,13 @@ def create_common_client_config(port: int, protocol: str) -> None:
 
 
 def confirm_ip_address() -> bool:
+    global IP_ADDRESS
+
     if not IP_ADDRESS:
         logger.error('Não foi possível encontrar o IP do servidor.')
         return False
 
-    logger.info(COLOR_NAME.YELLOW + 'IP do servidor: %s' + COLOR_NAME.END % IP_ADDRESS)
+    logger.info((COLOR_NAME.YELLOW + 'IP do servidor: %s' + COLOR_NAME.END) % IP_ADDRESS)
     result = input('Confirmar IP do servidor? [s/N] ')
 
     if result.lower() != 's':
@@ -132,31 +134,30 @@ def confirm_ip_address() -> bool:
             logger.error('IP do servidor não confirmado.')
             return False
 
-        global IP_ADDRESS
         IP_ADDRESS = result
 
     return True
 
 
 def get_port_openvpn() -> int:
-    port = None
+    console = Console('Porta do OpenVPN')
+    console.append_item(FuncItem('1194', lambda: '1194', shuld_exit=True))
+    console.append_item(FuncItem('8888', lambda: '8888', shuld_exit=True))
+    console.append_item(
+        FuncItem(
+            'Custom',
+            lambda: input(COLOR_NAME.YELLOW + 'Digite a porta: ' + COLOR_NAME.END),
+            shuld_exit=True,
+        )
+    )
+    console.show()
+    port = console.item_returned
 
-    while not port:
-        port = input(COLOR_NAME.YELLOW + 'Porta do OpenVPN: ' + COLOR_NAME.END)
-        try:
-            port = int(port)
-            if port < 1 or port > 65535:
-                raise ValueError
+    if port is not None and not port.isdigit():
+        logger.error('Porta não definida.')
+        raise ValueError('Porta não definida.')
 
-            cmd = 'netstat -lnp | grep %s' % port
-            if os.popen(cmd).read().strip():
-                raise ValueError
-
-        except ValueError:
-            port = None
-            logger.error('Porta inválida.')
-
-    return port
+    return int(port)
 
 
 def get_dns_openvpn() -> str:
@@ -204,6 +205,11 @@ def get_dns_openvpn() -> str:
         )
     )
     console.show()
+
+    if console.item_returned is None:
+        logger.error('DNS não definido.')
+        raise ValueError('DNS não definido.')
+
     return console.item_returned
 
 
@@ -224,6 +230,11 @@ def get_protocol_openvpn() -> str:
         )
     )
     console.show()
+
+    if console.item_returned is None:
+        logger.error('Protocolo não definido.')
+        raise ValueError('Protocolo não definido.')
+
     return console.item_returned
 
 

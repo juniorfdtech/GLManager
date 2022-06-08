@@ -115,7 +115,7 @@ class Formatter:
                 self.__format_choice
                 % {
                     'choice': self.__format_chave[0]
-                    + set_color('%02d' % (idx + 1 if not item.shuld_exit else 0), COLOR_NAME.GREEN)
+                    + set_color('%02d' % (idx + 1 if not item.is_exit_item else 0), COLOR_NAME.GREEN)
                     + self.__format_chave[1],
                     'point': set_color('•', COLOR_NAME.GREEN),
                     'text': set_color(item.text, COLOR_NAME.RED),
