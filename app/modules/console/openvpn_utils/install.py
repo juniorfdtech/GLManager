@@ -258,7 +258,7 @@ def download_easyrsa() -> None:
 
 
 def build_easyrsa() -> None:
-    os.system('tar -xzf %s--strip-components=1 --directory %s' % (EASYRSA_NAME, EASYRSA_PATH))
+    os.system('tar -xzf %s --strip-components=1 --directory %s' % (EASYRSA_NAME, EASYRSA_PATH))
 
     if not os.path.exists(EASYRSA_PATH):
         logger.error('Não foi possível baixar o EasyRSA.')
