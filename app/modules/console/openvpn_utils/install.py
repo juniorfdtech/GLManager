@@ -220,6 +220,7 @@ def build_easyrsa() -> None:
         'tar -xzf %s --strip-components=1 --directory %s 1>/dev/null 2>&1'
         % (EASYRSA_NAME, EASYRSA_PATH)
     )
+    os.system('rm -rf %s' % EASYRSA_NAME)
 
     if not os.path.exists(EASYRSA_PATH):
         logger.error('Não foi possível baixar o EasyRSA.')
@@ -228,7 +229,7 @@ def build_easyrsa() -> None:
     os.system('chown -R root:root %s' % EASYRSA_PATH)
 
     easyrsa = os.path.join(EASYRSA_PATH, 'easyrsa')
-    
+
     os.chdir(EASYRSA_PATH)
 
     os.system('bash -c "%s init-pki 1>/dev/null 2>&1"' % easyrsa)
