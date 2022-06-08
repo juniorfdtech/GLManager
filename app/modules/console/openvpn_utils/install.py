@@ -122,12 +122,18 @@ def confirm_ip_address() -> bool:
         logger.error('Não foi possível encontrar o IP do servidor.')
         return False
 
-    logger.info('IP do servidor: %s' % IP_ADDRESS)
+    logger.info(COLOR_NAME.YELLOW + 'IP do servidor: %s' + COLOR_NAME.END % IP_ADDRESS)
     result = input('Confirmar IP do servidor? [s/N] ')
 
     if result.lower() != 's':
-        logger.error('IP do servidor não confirmado.')
-        return False
+        result = input(COLOR_NAME.YELLOW + 'Digite o IP do servidor: ' + COLOR_NAME.END)
+
+        if not result:
+            logger.error('IP do servidor não confirmado.')
+            return False
+
+        global IP_ADDRESS
+        IP_ADDRESS = result
 
     return True
 
@@ -136,7 +142,7 @@ def get_port_openvpn() -> int:
     port = None
 
     while not port:
-        port = input('Porta do OpenVPN: ')
+        port = input(COLOR_NAME.YELLOW + 'Porta do OpenVPN: ' + COLOR_NAME.END)
         try:
             port = int(port)
             if port < 1 or port > 65535:
