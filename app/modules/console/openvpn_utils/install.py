@@ -10,7 +10,7 @@ RCLOCAL = '/etc/rc.local'
 
 OPENVPN_PATH = '/etc/openvpn'
 EASYRSA_PATH = os.path.join(OPENVPN_PATH, 'easy-rsa')
-EASYRSA_PKI_PATH = os.path.join(EASYRSA_PATH, 'easy-rsa/pki')
+EASYRSA_PKI_PATH = os.path.join(EASYRSA_PATH, 'pki')
 
 EASYRSA_PKI_CA = os.path.join(EASYRSA_PKI_PATH, 'ca.crt')
 EASYRSA_PKI_TLS = os.path.join(EASYRSA_PKI_PATH, 'ta.key')
