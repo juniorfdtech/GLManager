@@ -53,7 +53,7 @@ def create_ovpn_client(username: str) -> str:
 class OpenVPNUtils:
     @staticmethod
     def openvpn_is_running() -> bool:
-        status = os.system('pgrep openvpn') == 0
+        status = os.system('pgrep openvpn >/dev/null') == 0
         return status
 
     @staticmethod

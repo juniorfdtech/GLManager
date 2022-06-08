@@ -224,7 +224,10 @@ def download_easyrsa() -> None:
 
 
 def build_easyrsa() -> None:
-    os.system('tar -xzf %s --strip-components=1 --directory %s' % (EASYRSA_NAME, EASYRSA_PATH))
+    os.system(
+        'tar -xzf %s --strip-components=1 --directory %s 1>/dev/null 2>&1'
+        % (EASYRSA_NAME, EASYRSA_PATH)
+    )
 
     if not os.path.exists(EASYRSA_PATH):
         logger.error('Não foi possível baixar o EasyRSA.')
@@ -234,18 +237,18 @@ def build_easyrsa() -> None:
 
     os.chdir(EASYRSA_PATH)
 
-    os.system('bash -c "./easyrsa init-pki"')
-    os.system('bash -c "./easyrsa --batch build-ca nopass"')
-    os.system('bash -c "./easyrsa gen-dh"')
-    os.system('bash -c "./easyrsa build-server-full server nopass"')
-    os.system('bash -c "./easyrsa build-client-full GLTUNNEL nopass"')
-    os.system('bash -c "./easyrsa gen-crl"')
+    os.system('bash -c "./easyrsa init-pki 1>/dev/null 2>&1"')
+    os.system('bash -c "./easyrsa --batch build-ca nopass 1>/dev/null 2>&1"')
+    os.system('bash -c "./easyrsa gen-dh 1>/dev/null 2>&1"')
+    os.system('bash -c "./easyrsa build-server-full server nopass 1>/dev/null 2>&1"')
+    os.system('bash -c "./easyrsa build-client-full GLTUNNEL nopass 1>/dev/null 2>&1"')
+    os.system('bash -c "./easyrsa gen-crl 1>/dev/null 2>&1"')
 
     os.system(
         'cp pki/ca.crt pki/private/ca.key pki/dh.pem pki/issued/server.crt pki/private/server.key /etc/openvpn/easy-rsa/pki/crl.pem /etc/openvpn'
     )
-    os.system('chown -R nobody:nogroup /etc/openvpn/crl.pem')
-    os.system('openvpn --genkey --secret /etc/openvpn/ta.key')
+    os.system('chown -R nobody:nogroup /etc/openvpn/crl.pem 1>/dev/null 2>&1')
+    os.system('openvpn --genkey --secret /etc/openvpn/ta.key 1>/dev/null 2>&1')
 
 
 def build_server_config(port: int, protocol: str, dns: str) -> None:
@@ -296,7 +299,7 @@ def build_server_config(port: int, protocol: str, dns: str) -> None:
 
 
 def build_ip_forward() -> None:
-    os.system('sysctl -w net.ipv4.ip_forward=1')
+    os.system('sysctl -w net.ipv4.ip_forward=1 1>/dev/null 2>&1')
 
     with open('/proc/sys/net/ipv4/ip_forward', 'w') as f:
         f.write('1')
@@ -342,10 +345,10 @@ def build_iptables(ip: str, port: int, protocol: str) -> None:
 
 
 def build_service_openvpn() -> None:
-    if os.system('pgrep systemd-journal') == 0:
-        os.system('systemctl restart openvpn@server.service')
+    if os.system('pgrep systemd-journal >/dev/null') == 0:
+        os.system('systemctl restart openvpn@server.service 1>/dev/null 2>&1')
     else:
-        os.system('/etc/init.d/openvpn restart')
+        os.system('/etc/init.d/openvpn restart 1>/dev/null 2>&1')
 
 
 def openvpn_install() -> None:
@@ -388,14 +391,14 @@ def uninstall_openvpn() -> None:
     os.system('rm -rf /etc/openvpn/easy-rsa')
     os.system('rm -rf /etc/openvpn/ipp.txt')
 
-    if os.system('pgrep systemd-journal') == 0:
-        os.system('systemctl stop openvpn')
-        os.system('systemctl disable openvpn')
-        os.system('systemctl daemon-reload')
+    if os.system('pgrep systemd-journal 1>/dev/null 2>&1') == 0:
+        os.system('systemctl stop openvpn 1>/dev/null 2>&1')
+        os.system('systemctl disable openvpn 1>/dev/null 2>&1')
+        os.system('systemctl daemon-reload 1>/dev/null 2>&1')
     else:
-        os.system('/etc/init.d/openvpn stop')
-        os.system('update-rc.d -f openvpn remove')
+        os.system('/etc/init.d/openvpn stop 1>/dev/null 2>&1')
+        os.system('update-rc.d -f openvpn remove 1>/dev/null 2>&1')
 
-    os.system('apt-get purge openvpn -y')
-    os.system('apt-get autoremove -y')
-    os.system('apt-get clean -y')
+    os.system('apt-get purge openvpn -y 1>/dev/null 2>&1')
+    os.system('apt-get autoremove -y 1>/dev/null 2>&1')
+    os.system('apt-get clean -y 1>/dev/null 2>&1')
