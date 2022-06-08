@@ -309,7 +309,7 @@ def build_server_config(port: int, protocol: str, dns: str) -> None:
                     'cipher AES-256-CBC',
                     'comp-lzo yes',
                     'user nobody',
-                    'group $GROUPNAME',
+                    'group nogroup',
                     'persist-key',
                     'persist-tun',
                     'status openvpn-status.log',
