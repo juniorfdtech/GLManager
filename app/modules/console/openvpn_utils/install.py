@@ -227,26 +227,32 @@ def build_easyrsa() -> None:
         raise ValueError('Não foi possível baixar o EasyRSA.')
 
     os.system('chown -R root:root %s' % EASYRSA_PATH)
-
     easyrsa = os.path.join(EASYRSA_PATH, 'easyrsa')
-
     os.chdir(EASYRSA_PATH)
 
-    os.system('bash -c "%s init-pki 1>/dev/null 2>&1"' % easyrsa)
-    os.system('bash -c "%s --batch build-ca nopass 1>/dev/null 2>&1"' % easyrsa)
-    os.system('bash -c "%s gen-dh 1>/dev/null 2>&1"')
-    os.system('bash -c "%s build-server-full server nopass 1>/dev/null 2>&1"' % easyrsa)
-    os.system('bash -c "%s build-client-full GLTUNNEL nopass 1>/dev/null 2>&1"' % easyrsa)
-    os.system('bash -c "%s gen-crl 1>/dev/null 2>&1"' % easyrsa)
-
+    os.system('%s init-pki 1>/dev/null 2>&1' % easyrsa)
+    os.system('%s --batch build-ca nopass 1>/dev/null 2>&1' % easyrsa)
+    os.system('%s gen-dh 1>/dev/null 2>&1')
+    os.system('%s build-server-full server nopass 1>/dev/null 2>&1' % easyrsa)
+    os.system('%s build-client-full GLTUNNEL nopass 1>/dev/null 2>&1' % easyrsa)
+    os.system('%s gen-crl 1>/dev/null 2>&1' % easyrsa)
     os.system(
-        'cp pki/ca.crt pki/private/ca.key pki/dh.pem pki/issued/server.crt pki/private/server.key /etc/openvpn/easy-rsa/pki/crl.pem /etc/openvpn'
-    )
-    os.system('chown -R nobody:nogroup %s 1>/dev/null 2>&1' % os.path.join(OPENVPN_PATH, 'crl.pem'))
-    os.system(
-        'openvpn --genkey --secret %s 1>/dev/null 2>&1' % os.path.join(OPENVPN_PATH, 'ta.key')
+        ' '.join(
+            [
+                'cp',
+                'pki/ca.crt',
+                'pki/private/ca.key',
+                'pki/dh.pem',
+                'pki/issued/server.crt',
+                'pki/private/server.key',
+                '/etc/openvpn/easy-rsa/pki/crl.pem',
+                '/etc/openvpn',
+            ]
+        )
     )
 
+    os.system('chown -R nobody:nogroup %s >/dev/null' % os.path.join(OPENVPN_PATH, 'crl.pem'))
+    os.system('openvpn --genkey --secret %s >/dev/null' % os.path.join(OPENVPN_PATH, 'ta.key'))
     os.chdir(CURRENT_PATH)
 
 
