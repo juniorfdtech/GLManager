@@ -22,7 +22,7 @@ def connection_choices():
     console.show()
 
 
-def main_console_main():
+def main():
     console = Console('GERENCIADOR')
     console.append_item(FuncItem('GERENCIADOR DE USUÁRIOS', user_console_main))
     console.append_item(FuncItem('GERENCIADOR DE CONEXÕES', connection_choices))
@@ -35,7 +35,7 @@ if __name__ == '__main__':
         user_cli_main(sys.argv[1:])
     else:
         try:
-            main_console_main()
+            main()
         except KeyboardInterrupt:
             pass
         finally:
