@@ -21,7 +21,7 @@ class Console:
 
         self._exit = False
 
-    def append_item(self, item):
+    def append_item(self, item: 'Item'):
         if self.items:
             del self.items[-1]
 
@@ -38,9 +38,11 @@ class Console:
 
     def select(self, idx):
         item_selected = self.items[idx]
+
         self.items[idx].index = idx
         self.item_returned = item_selected.action()
         self.selected_exit = item_selected.shuld_exit
+        self._exit = item_selected.exit_on_select
 
     def user_input(self):
         return input(
@@ -71,6 +73,7 @@ class Console:
 
     def exit(self):
         self._exit = True
+        self.selected_exit = True
 
     @staticmethod
     def clear_screen():
@@ -125,9 +128,10 @@ class ConsoleUser(Console):
 
 
 class Item:
-    def __init__(self, text, shuld_exit=False):
+    def __init__(self, text, shuld_exit=False, exit_on_select=False):
         self.text = text
         self.shuld_exit = shuld_exit
+        self.exit_on_select = exit_on_select
         self.is_exit_item = False
 
     def action(self):
@@ -135,8 +139,8 @@ class Item:
 
 
 class FuncItem(Item):
-    def __init__(self, text, func, *args, shuld_exit=False):
-        super(FuncItem, self).__init__(text, shuld_exit=shuld_exit)
+    def __init__(self, text, func, *args, shuld_exit=False, exit_on_select=False):
+        super(FuncItem, self).__init__(text, shuld_exit, exit_on_select)
         self.func = func
         self.args = args
 
@@ -146,7 +150,7 @@ class FuncItem(Item):
 
 class ExitItem(Item):
     def __init__(self, text='SAIR'):
-        super(ExitItem, self).__init__(text, shuld_exit=True)
+        super(ExitItem, self).__init__(text, shuld_exit=True, exit_on_select=True)
         self.is_exit_item = True
 
 

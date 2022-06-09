@@ -249,17 +249,14 @@ class UserManager:
 
 
 class UserMenuConsoleDeleteUser(UserMenuConsole):
-    def __init__(self, user_use_case: UserUseCase, callback_select_user: t.Callable):
-        super().__init__(user_use_case)
-        self._callback_select_user = callback_select_user
-
-    def select_user(self, user: t.Dict[str, t.Any]) -> None:
-        self._user_selected = user
-        self._callback_select_user(user)
-        self.create_items()
+    def __init__(self, user_use_case: UserUseCase):
+        super().__init__(user_use_case, 'EXCLUIR USUÁRIO')
 
 
 class UserMenuConsolePassword(UserMenuConsole):
+    def __init__(self, user_use_case: UserUseCase):
+        super().__init__(user_use_case, 'ALTERAR SENHA')
+
     def create_items(self) -> None:
         self._console.items.clear()
 
@@ -275,11 +272,15 @@ class UserMenuConsolePassword(UserMenuConsole):
                     user['username'].ljust(self.width()) + ' - ' + user['password'],
                     self.select_user,
                     user_dto.to_dict(),
+                    exit_on_select=True,
                 )
             )
 
 
 class UserMenuConsoleConnectionLimit(UserMenuConsole):
+    def __init__(self, user_use_case: UserUseCase):
+        super().__init__(user_use_case, 'ALTERAR LIMITE DE CONEXÕES')
+
     def create_items(self) -> None:
         self._console.items.clear()
 
@@ -295,11 +296,15 @@ class UserMenuConsoleConnectionLimit(UserMenuConsole):
                     user['username'].ljust(self.width()) + ' - %02d' % user['connection_limit'],
                     self.select_user,
                     user_dto.to_dict(),
+                    exit_on_select=True,
                 )
             )
 
 
 class UserMenuConsoleExpirationDate(UserMenuConsole):
+    def __init__(self, user_use_case: UserUseCase):
+        super().__init__(user_use_case, 'ALTERAR DATA DE EXPIRACAO')
+
     def create_items(self) -> None:
         self._console.items.clear()
 
@@ -317,6 +322,7 @@ class UserMenuConsoleExpirationDate(UserMenuConsole):
                     + user['expiration_date'].strftime('%d/%m/%Y'),
                     self.select_user,
                     user_dto.to_dict(),
+                    exit_on_select=True,
                 )
             )
 
@@ -327,9 +333,8 @@ class UserAction:
         Console.clear_screen()
         print(create_menu_bg('CRIAR USUARIO', set_pars=False))
 
-        user_manager = UserManager(user_input_data, UserUseCase(UserRepository()))
-
         try:
+            user_manager = UserManager(user_input_data, UserUseCase(UserRepository()))
             data = user_manager.create_user()
 
             if OpenVPNUtils.openvpn_is_installed():
@@ -341,108 +346,150 @@ class UserAction:
                     data['ovpn_path'] = path
 
             user_manager.show_message_user_created(data)
+        except KeyboardInterrupt:
+            return
+
         except Exception as e:
             logger.error(e)
 
         Console.pause()
 
     @staticmethod
-    def delete_user_action(user_data: t.Dict[str, t.Any]):
-        if not user_data:
-            return
+    def delete_user_action():
+        Console.clear_screen()
 
-        try:
-            user_manager = UserManager(UserInputData.of(user_data), UserUseCase(UserRepository()))
-            data = user_manager.delete_user()
+        user_repository = UserRepository()
+        user_use_case = UserUseCase(user_repository)
+        console = UserMenuConsoleDeleteUser(user_use_case)
 
-            if OpenVPNUtils.remove_ovpn_client(data['username']):
-                logger.info('Arquivo OVPN removido com sucesso.')
+        while not console.selected_exit:
+            console.start()
 
-            logger.info('Usuário deletado com sucesso.')
-        except Exception as e:
-            logger.error(e)
+            data = console.user_selected
+            if not data:
+                continue
 
-        Console.pause()
+            try:
+                user_manager = UserManager(UserInputData.of(data), user_use_case)
+                data = user_manager.delete_user()
 
-    @staticmethod
-    def password_change_action(user_data: t.Dict[str, t.Any]) -> None:
-        if not user_data:
-            return
+                if OpenVPNUtils.remove_ovpn_client(data['username']):
+                    logger.info('Arquivo OVPN removido com sucesso.')
 
-        logger.info('Usurário: %s', COLOR_NAME.YELLOW + user_data['username'] + COLOR_NAME.RESET)
-        logger.info('Senha atual: %s', COLOR_NAME.YELLOW + user_data['password'] + COLOR_NAME.RESET)
+                logger.info('Usuário deletado com sucesso.')
+            except Exception as e:
+                logger.error(e)
 
-        try:
-            user_manager = UserManager(UserInputData.of(user_data), UserUseCase(UserRepository()))
-            user_manager.update_password(UserInputData().password)
-            logger.info('Senha alterada com sucesso!')
-        except Exception as e:
-            logger.error(e)
-
-        Console.pause()
+            Console.pause()
 
     @staticmethod
-    def limit_connection_change_action(user_data: t.Dict[str, t.Any]) -> None:
-        if not user_data:
-            return
+    def password_change_action() -> None:
+        Console.clear_screen()
 
-        logger.info('Usurário: %s', COLOR_NAME.YELLOW + user_data['username'] + COLOR_NAME.RESET)
-        logger.info(
-            'Limite atual: %s',
-            COLOR_NAME.YELLOW + str(user_data['connection_limit']) + COLOR_NAME.RESET,
-        )
+        user_repository = UserRepository()
+        user_use_case = UserUseCase(user_repository)
+        console = UserMenuConsolePassword(user_use_case)
 
-        try:
-            user_manager = UserManager(UserInputData.of(user_data), UserUseCase(UserRepository()))
-            user_manager.update_connection_limit(UserInputData().connection_limit)
-            logger.info('Limite de conexões alterado com sucesso!')
-        except Exception as e:
-            logger.error(e)
+        while not console.selected_exit:
+            console.start()
 
-        Console.pause()
+            data = console.user_selected
+            if not data:
+                continue
+
+            logger.info('Usurário: %s', COLOR_NAME.YELLOW + data['username'] + COLOR_NAME.RESET)
+            logger.info('Senha atual: %s', COLOR_NAME.YELLOW + data['password'] + COLOR_NAME.RESET)
+
+            try:
+                user_manager = UserManager(UserInputData.of(data), user_use_case)
+                data = user_manager.update_password(UserInputData().password)
+
+                logger.info('Senha alterada com sucesso.')
+            except Exception as e:
+                logger.error(e)
+
+            Console.pause()
 
     @staticmethod
-    def expiration_date_change_action(user_data: t.Dict[str, t.Any]) -> None:
-        if not user_data:
-            return
+    def limit_connection_change_action() -> None:
+        Console.clear_screen()
 
-        user_dto = UserDto.of(user_data)
-        expiration_date = user_dto.expiration_date
+        user_repository = UserRepository()
+        user_use_case = UserUseCase(user_repository)
+        console = UserMenuConsoleConnectionLimit(user_use_case)
 
-        if isinstance(user_dto.expiration_date, str):
-            expiration_date = datetime.datetime.strptime(
-                user_dto.expiration_date,
-                '%Y-%m-%d %H:%M:%S',
-            )
+        while not console.selected_exit:
+            console.start()
 
-        days_to_expiration = (expiration_date - datetime.datetime.now()).days
+            data = console.user_selected
+            if not data:
+                continue
 
-        logger.info('Usurário: %s', COLOR_NAME.YELLOW + user_data['username'] + COLOR_NAME.RESET)
-        logger.info(
-            'Data atual: %s',
-            COLOR_NAME.YELLOW + expiration_date.strftime('%d/%m/%Y') + COLOR_NAME.RESET,
-        )
-        logger.info(
-            'Dias restantes: %s',
-            COLOR_NAME.YELLOW + str(days_to_expiration) + COLOR_NAME.RESET,
-        )
-
-        try:
-            user_manager = UserManager(UserInputData.of(user_data), UserUseCase(UserRepository()))
-            user_input = UserInputData()
-
-            new_date_expiration = datetime.datetime.strptime(user_input.expiration_date, '%d/%m/%Y')
-            user_manager.update_expiration_date(new_date_expiration)
-
+            logger.info('Usurário: %s', COLOR_NAME.YELLOW + data['username'] + COLOR_NAME.RESET)
             logger.info(
-                'Data de expiração alterada com sucesso! %s -> %s',
-                expiration_date,
-                new_date_expiration,
+                'Limite de conexões: %s',
+                COLOR_NAME.YELLOW + '%02d' % data['connection_limit'] + COLOR_NAME.RESET,
             )
-        except Exception as e:
-            logger.error(e)
 
-        Console.pause()
+            try:
+                user_manager = UserManager(UserInputData.of(data), user_use_case)
+                data = user_manager.update_connection_limit(UserInputData().connection_limit)
+
+                logger.info('Limite de conexões alterado com sucesso.')
+            except Exception as e:
+                logger.error(e)
+
+            Console.pause()
+
+    @staticmethod
+    def expiration_date_change_action() -> None:
+        Console.clear_screen()
+
+        user_repository = UserRepository()
+        user_use_case = UserUseCase(user_repository)
+        console = UserMenuConsoleExpirationDate(user_use_case)
+
+        while not console.selected_exit:
+            console.start()
+
+            data = console.user_selected
+            if not data:
+                continue
+
+            expiration_date = data['expiration_date']
+
+            if isinstance(expiration_date, str):
+                expiration_date = datetime.datetime.strptime(
+                    expiration_date,
+                    '%Y-%m-%d %H:%M:%S',
+                )
+
+            days_to_expiration = (expiration_date - datetime.datetime.now()).days
+
+            logger.info('Usurário: %s', COLOR_NAME.YELLOW + data['username'] + COLOR_NAME.RESET)
+            logger.info(
+                'Data de expiração: %s',
+                COLOR_NAME.YELLOW + data['expiration_date'].strftime('%d/%m/%Y') + COLOR_NAME.RESET,
+            )
+            logger.info(
+                'Dias restantes: %s',
+                COLOR_NAME.YELLOW + str(days_to_expiration) + COLOR_NAME.RESET,
+            )
+
+            try:
+                user_manager = UserManager(UserInputData.of(data), UserUseCase(UserRepository()))
+                user_input = UserInputData()
+
+                new_date_expiration = datetime.datetime.strptime(
+                    user_input.expiration_date, '%d/%m/%Y'
+                )
+                user_manager.update_expiration_date(new_date_expiration)
+
+                logger.info('Data de expiração alterada com sucesso.')
+            except Exception as e:
+                logger.error(e)
+
+            Console.pause()
 
     @staticmethod
     def monitor_action() -> None:
@@ -517,33 +564,25 @@ def user_console_main():
     console.append_item(
         FuncItem(
             'DELETAR USUÁRIO',
-            lambda: UserMenuConsoleDeleteUser(
-                UserUseCase(UserRepository()), UserAction.delete_user_action
-            ).show(),
+            lambda: UserAction.delete_user_action(),
         )
     )
     console.append_item(
         FuncItem(
             'ALTERAR SENHA',
-            lambda: UserAction.password_change_action(
-                UserMenuConsolePassword(UserUseCase(UserRepository())).show()
-            ),
+            lambda: UserAction.password_change_action(),
         )
     )
     console.append_item(
         FuncItem(
             'ALTERAR LIMITE',
-            lambda: UserAction.limit_connection_change_action(
-                UserMenuConsoleConnectionLimit(UserUseCase(UserRepository())).show()
-            ),
+            lambda: UserAction.limit_connection_change_action(),
         )
     )
     console.append_item(
         FuncItem(
             'ALTERAR EXPIRACAO',
-            lambda: UserAction.expiration_date_change_action(
-                UserMenuConsoleExpirationDate(UserUseCase(UserRepository())).show()
-            ),
+            lambda: UserAction.expiration_date_change_action(),
         )
     )
     console.append_item(

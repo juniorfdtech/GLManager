@@ -26,6 +26,10 @@ class UserMenuConsole:
     def _users(self) -> t.List[UserDto]:
         return self._user_use_case.get_all()
 
+    @property
+    def selected_exit(self) -> bool:
+        return self._console.selected_exit
+
     def select_user(self, user: t.Dict[str, t.Any]) -> None:
         if not user or not isinstance(user, dict):
             raise ValueError('Usuário não informado')
@@ -39,6 +43,7 @@ class UserMenuConsole:
         if not self._users:
             logger.error('Nenhum usuario foi encontrado.')
             self._console.pause()
+            self._console.exit()
             return
 
         for user in self._users:
@@ -48,6 +53,7 @@ class UserMenuConsole:
                     user['username'],
                     self.select_user,
                     user_dto.to_dict(),
+                    exit_on_select=True,
                 )
             )
 
@@ -55,12 +61,16 @@ class UserMenuConsole:
         width = [len(user['username']) for user in self._users]
         return max(width)
 
-    def show(self) -> t.Union[t.Dict[str, t.Any], t.Dict[str, t.Any]]:
-        if self.user_selected is None:
+    def start(self) -> None:
+        self._console._exit = False
+        self._console.selected_exit = False
+        self._user_selected = None
+
+        try:
             self.create_items()
             self._console.show()
-
-        return self.user_selected
+        except KeyboardInterrupt:
+            self._console.exit()
 
 
 class ConsoleUUID:

@@ -131,10 +131,12 @@ class V2RayActions:
             user_use_case = UserUseCase(UserRepository())
 
             console = UserMenuConsole(user_use_case)
-            console.show()
+            console.start()
 
-            if console._user_selected is not None:
-                user_dto = UserDto.of(console._user_selected)
+            user_selected = console.user_selected
+
+            if user_selected is not None:
+                user_dto = UserDto.of(user_selected)
                 user_dto.v2ray_uuid = uuid
 
                 user_use_case.update(user_dto)
