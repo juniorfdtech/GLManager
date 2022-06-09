@@ -162,8 +162,8 @@ class FormatterSocks(Formatter):
         for mode, src_port, dst_port in running_ports:
             menu += '%s %s %s\n' % (
                 COLOR_NAME.GREEN + mode + COLOR_NAME.END,
-                COLOR_NAME.GREEN + str(src_port).rjust(23) + COLOR_NAME.END,
-                COLOR_NAME.GREEN + str(dst_port).rjust(20) + COLOR_NAME.END,
+                COLOR_NAME.GREEN + str(src_port).rjust(21) + COLOR_NAME.END,
+                COLOR_NAME.GREEN + str(dst_port).rjust(22) + COLOR_NAME.END,
             )
 
         return menu + create_line(color=COLOR_NAME.BLUE, show=False) + '\n'
