@@ -10,7 +10,7 @@ from app.utilities.logger import logger
 
 
 def check_screen_is_installed():
-    command = 'screen -v >/dev/null 2>&1'
+    command = 'command -v screen >/dev/null 2>&1'
     return os.system(command) == 0
 
 
@@ -74,6 +74,9 @@ class SocksManager:
         result = []
 
         for line in output.split('\n'):
+            if not line:
+                continue
+
             src_port = int(line.split('--port')[1].split()[0])
             dst_port = int(line.split('--remote')[1].split()[0].split(':')[1])
 
