@@ -9,6 +9,7 @@ from app.modules.console import (
 )
 
 from console import Console, FuncItem
+from app.utilities.logger import logger
 
 
 def connection_choices():
@@ -33,4 +34,10 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         user_cli_main(sys.argv[1:])
     else:
-        main_console_main()
+        try:
+            main_console_main()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            logger.info('Saindo...')
+            sys.exit(0)
