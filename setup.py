@@ -22,6 +22,7 @@ setup(
     packages=PACKAGES,
     include_package_data=True,
     install_requires=REQUIREMENTS,
+    include_dirs=['./scripts'],
     entry_points={
         'console_scripts': [
             'vps = app.__main__:main',
