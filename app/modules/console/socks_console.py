@@ -4,14 +4,12 @@ import os
 from console import Console, FuncItem, COLOR_NAME
 from console.formatter import create_menu_bg, create_line
 
+from scripts import SOCKS_PATH, CERT_PATH
+
 from app.utilities.logger import logger
 
 
 class SocksManager:
-    path = './scripts/'
-    filename = 'socks.py'
-    socks_path = os.path.join(path, filename)
-
     def is_running(self, port: int = 80) -> bool:
         cmd = 'screen -ls | grep %s' % port
         return os.system(cmd) == 0
@@ -20,15 +18,14 @@ class SocksManager:
         cmd = 'screen -mdS socks:%s:%s python3 %s --port %s --remote 127.0.0.1:%s --%s' % (
             src_port,
             mode,
-            self.socks_path,
+            SOCKS_PATH,
             src_port,
             dst_port,
             mode,
         )
 
         if mode == 'https':
-            cert = './scripts/cert.pem'
-            cmd += ' --cert %s' % cert
+            cmd += ' --cert %s' % CERT_PATH
 
         return os.system(cmd) == 0
 
@@ -50,12 +47,6 @@ class SocksManager:
             (int(port), mode.strip()) for port, mode in (line.split(':')[1:] for line in output)
         )
         return socks
-
-    @staticmethod
-    def download() -> bool:
-        url = 'https://raw.githubusercontent.com/DuTra01/GLPlugins/master/scripts/proxy.py'
-        cmd = 'wget -O %s %s' % (SocksManager.socks_path, url)
-        return os.system(cmd) == 0
 
 
 class ConsolePort:
