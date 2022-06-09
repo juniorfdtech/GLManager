@@ -2,11 +2,30 @@ import typing as t
 import os
 
 from console import Console, FuncItem, COLOR_NAME
-from console.formatter import create_menu_bg, create_line
+from console.formatter import create_menu_bg, create_line, Formatter
 
 from scripts import SOCKS_PATH, CERT_PATH
 
 from app.utilities.logger import logger
+
+
+def check_screen_is_installed():
+    command = 'screen -v >/dev/null 2>&1'
+    return os.system(command) == 0
+
+
+def process_install_screen():
+    if check_screen_is_installed():
+        return
+
+    answer = input(
+        COLOR_NAME.YELLOW + 'Screen não está instalado. Deseja instalar? [s/N]: ' + COLOR_NAME.END
+    )
+    if answer.lower() == 's':
+        logger.info('Instalando screen...')
+        os.system('sudo apt-get install screen -y >/dev/null 2>&1')
+        logger.info('Screen instalado com sucesso!')
+        Console.pause()
 
 
 class SocksManager:
@@ -47,6 +66,31 @@ class SocksManager:
             (int(port), mode.strip()) for port, mode in (line.split(':')[1:] for line in output)
         )
         return socks
+
+    @staticmethod
+    def get_src_and_dst_ports() -> t.Tuple[str, int, int]:
+        cmd = 'ps -ef | grep python3 | grep socks | grep -v grep'
+        output = os.popen(cmd).read().strip()
+        result = []
+
+        for line in output.split('\n'):
+            src_port = int(line.split('--port')[1].split()[0])
+            dst_port = int(line.split('--remote')[1].split()[0].split(':')[1])
+
+            mode = 'null'
+
+            if 'http' in line:
+                mode = 'http'
+
+            if 'https' in line:
+                mode = 'https'
+
+            data = (mode, src_port, dst_port)
+
+            if data not in result:
+                result.append(data)
+
+        return result
 
 
 class ConsolePort:
@@ -105,6 +149,24 @@ class ConsolePort:
             self._console.show()
 
         return self._current_port_selected
+
+
+class FormatterSocks(Formatter):
+    def build_menu(self, title):
+        menu = super().build_menu(title)
+        running_ports = SocksManager.get_src_and_dst_ports()
+
+        if not running_ports:
+            return menu
+
+        for mode, src_port, dst_port in running_ports:
+            menu += '%s %s %s\n' % (
+                COLOR_NAME.GREEN + mode + COLOR_NAME.END,
+                COLOR_NAME.GREEN + str(src_port).rjust(23) + COLOR_NAME.END,
+                COLOR_NAME.GREEN + str(dst_port).rjust(20) + COLOR_NAME.END,
+            )
+
+        return menu + create_line(color=COLOR_NAME.BLUE, show=False) + '\n'
 
 
 class ConsoleStopPort(ConsolePort):
@@ -200,7 +262,9 @@ class SocksActions:
 
 
 def socks_console_main():
-    console = Console('SOCKS Manager')
+    process_install_screen()
+
+    console = Console('SOCKS Manager', formatter=FormatterSocks())
     console.append_item(FuncItem('ABRIR PORTA HTTP', SocksActions.start, 'http'))
     console.append_item(FuncItem('ABRIR PORTA HTTPS', SocksActions.start, 'https'))
     console.append_item(FuncItem('FECHAR PORTA', SocksActions.stop))

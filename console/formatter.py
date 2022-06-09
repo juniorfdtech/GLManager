@@ -4,7 +4,7 @@ import os
 import time
 import platform
 
-from .colors import COLOR_NAME, BG_COLOR_NAME, set_color, set_color_id
+from .colors import COLOR_NAME, BG_COLOR_NAME, set_color
 from .utils import get_ip_address
 
 
@@ -24,13 +24,22 @@ def linux_distribution():
             return 'Unknown'
 
 
+def create_line(size=50, type='━', color=COLOR_NAME.GREEN, show=True):
+    line = set_color(type * size, color)
+
+    if show:
+        print(line)
+
+    return set_color(type * size, color)
+
+
 def create_menu_bg(text, _type='-', size=50, color_bg=BG_COLOR_NAME.RED, set_pars=True):
     text_size = len(text) + 2 if set_pars else len(text)
     bar_size = (size - text_size) // 2
 
     if set_pars:
         return '%s\n%s%s%s%s%s\n%s' % (
-            set_color('━' * 50, COLOR_NAME.BLUE),
+            create_line(color=COLOR_NAME.BLUE, show=False),
             set_color(_type * bar_size, color_bg),
             set_color('[', COLOR_NAME.WHITE, color_bg),
             set_color(text, COLOR_NAME.GREEN, color_bg),
@@ -38,25 +47,18 @@ def create_menu_bg(text, _type='-', size=50, color_bg=BG_COLOR_NAME.RED, set_par
             set_color(
                 _type * (bar_size + 1 if (bar_size * 2) + text_size < size else bar_size), color_bg
             ),
-            set_color('━' * 50, COLOR_NAME.BLUE),
+            create_line(color=COLOR_NAME.BLUE, show=False),
         )
 
     return '%s\n%s%s%s\n%s' % (
-        set_color('━' * 50, COLOR_NAME.BLUE),
+        create_line(color=COLOR_NAME.BLUE, show=False),
         set_color(_type * bar_size, color_bg),
         set_color(text, COLOR_NAME.GREEN, color_bg),
         set_color(
             _type * (bar_size + 1 if (bar_size * 2) + text_size < size else bar_size), color_bg
         ),
-        set_color('━' * 50, COLOR_NAME.BLUE),
+        create_line(color=COLOR_NAME.BLUE, show=False),
     )
-
-
-def create_line(size=50, color=COLOR_NAME.GREEN, show=True):
-    line = set_color('━' * size, color)
-    if show:
-        print(line)
-    return set_color('━' * size, color)
 
 
 try:
@@ -115,7 +117,9 @@ class Formatter:
                 self.__format_choice
                 % {
                     'choice': self.__format_chave[0]
-                    + set_color('%02d' % (idx + 1 if not item.is_exit_item else 0), COLOR_NAME.GREEN)
+                    + set_color(
+                        '%02d' % (idx + 1 if not item.is_exit_item else 0), COLOR_NAME.GREEN
+                    )
                     + self.__format_chave[1],
                     'point': set_color('•', COLOR_NAME.GREEN),
                     'text': set_color(item.text, COLOR_NAME.RED),
@@ -176,15 +180,23 @@ class Formatter:
                 items = [items[: len(items) // 2], items[len(items) // 2 :]]
         return self.format_two_columm(items)
 
+    def build_banner(self):
+        return BANNER
+
+    def build_menu(self, title):
+        return create_menu_bg(title) + '\n'
+
     def formatter(self, items, title):
-        format_string = BANNER
-        format_string += create_menu_bg(title) + '\n'
+        format_string = self.build_banner()
+        format_string += self.build_menu(title)
+
         if self.__items:
             format_string += self.__items
-            format_string += set_color('━' * 50, COLOR_NAME.BLUE) + '\n'
+            format_string += create_line(color=COLOR_NAME.BLUE, show=False) + '\n'
         if len(items) < 10 or self.__columns == 1:
             format_string += self.format_columm(items)
         else:
             format_string += self.format_items_two_colums(items)
-        format_string += set_color('━' * 50, COLOR_NAME.BLUE)
+
+        format_string += create_line(color=COLOR_NAME.BLUE, show=False)
         return format_string
