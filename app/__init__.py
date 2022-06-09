@@ -7,7 +7,7 @@ with DBConnection() as db:
 
 import app.modules
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 __author__ = 'Glemison C. DuTra'
 __email__ = 'glemyson20@gmail.com'
 __license__ = 'MIT'

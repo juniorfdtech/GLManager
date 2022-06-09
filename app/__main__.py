@@ -23,21 +23,22 @@ def connection_choices():
 
 
 def main():
+    if len(sys.argv) > 1:
+        user_cli_main(sys.argv[1:])
+        return
+
     console = Console('GERENCIADOR')
     console.append_item(FuncItem('GERENCIADOR DE USUÁRIOS', user_console_main))
     console.append_item(FuncItem('GERENCIADOR DE CONEXÕES', connection_choices))
     console.append_item(FuncItem('GERENCIADOR DO PAINEL', input))
-    console.show()
+
+    try:
+        console.show()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        logger.info('Até mais!')
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        user_cli_main(sys.argv[1:])
-    else:
-        try:
-            main()
-        except KeyboardInterrupt:
-            pass
-        finally:
-            logger.info('Saindo...')
-            sys.exit(0)
+    main()
