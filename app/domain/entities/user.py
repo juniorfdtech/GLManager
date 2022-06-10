@@ -6,12 +6,12 @@ class User(BaseEntity):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String(50), nullable=False)
+    username = Column(String(50), nullable=False, unique=True)
     password = Column(String(50), nullable=False)
     connection_limit = Column(Integer, nullable=False)
     expiration_date = Column(DateTime, nullable=False)
 
-    v2ray_uuid = Column(String(50), nullable=True)
+    v2ray_uuid = Column(String(50), nullable=True, unique=True)
 
     def __str__(self) -> str:
         return f'{self.id} - {self.username}'
