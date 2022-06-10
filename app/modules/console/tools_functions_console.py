@@ -126,7 +126,7 @@ class SSHPlusRestoreBackup(RestoreBackup):
     def restore(self) -> None:
         logger.info('Restaurando SSHPlus...')
 
-        command = 'tar -xzf {} --directory {}'
+        command = 'tar -xvf {} --directory {}'
         result = os.system(command.format(self.backup.full_path, self.backup.path))
 
         if result != 0:
