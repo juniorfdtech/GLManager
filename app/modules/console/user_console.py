@@ -2,7 +2,7 @@ import datetime
 import typing as t
 
 from console import Console, FuncItem, COLOR_NAME
-from console.formatter import create_menu_bg, create_line
+from console.formatter import create_menu_bg, create_line, Formatter
 
 from app.utilities.logger import logger
 from app.utilities.utils import days_to_date, exec_command, count_connections
@@ -256,6 +256,7 @@ class UserMenuConsoleDeleteUser(UserMenuConsole):
 class UserMenuConsolePassword(UserMenuConsole):
     def __init__(self, user_use_case: UserUseCase):
         super().__init__(user_use_case, 'ALTERAR SENHA')
+        self._console.formatter = Formatter(1)
 
     def create_items(self) -> None:
         self._console.items.clear()
@@ -281,6 +282,7 @@ class UserMenuConsolePassword(UserMenuConsole):
 class UserMenuConsoleConnectionLimit(UserMenuConsole):
     def __init__(self, user_use_case: UserUseCase):
         super().__init__(user_use_case, 'ALTERAR LIMITE DE CONEXÕES')
+        self._console.formatter = Formatter(1)
 
     def create_items(self) -> None:
         self._console.items.clear()
@@ -306,6 +308,7 @@ class UserMenuConsoleConnectionLimit(UserMenuConsole):
 class UserMenuConsoleExpirationDate(UserMenuConsole):
     def __init__(self, user_use_case: UserUseCase):
         super().__init__(user_use_case, 'ALTERAR DATA DE EXPIRACAO')
+        self._console.formatter = Formatter(1)
 
     def create_items(self) -> None:
         self._console.items.clear()

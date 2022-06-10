@@ -50,7 +50,7 @@ class UserMenuConsole:
             user_dto = UserDto.of(user)
             self._console.append_item(
                 FuncItem(
-                    user['username'],
+                    user['username'] + ' ' * (self.width() - len(user['username'])),
                     self.select_user,
                     user_dto.to_dict(),
                     exit_on_select=True,
