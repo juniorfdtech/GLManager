@@ -126,8 +126,8 @@ class SSHPlusRestoreBackup(RestoreBackup):
     def restore(self) -> None:
         logger.info('Restaurando SSHPlus...')
 
-        command = 'tar -xvf {} --directory {}'
-        result = os.system(command.format(self.backup.full_path, self.backup.path))
+        command = 'tar -xvf {} --directory / >/dev/null 2>&1'
+        result = os.system(command.format(self.backup.full_path))
 
         if result != 0:
             logger.error('Falha ao restaurar SSHPlus')
