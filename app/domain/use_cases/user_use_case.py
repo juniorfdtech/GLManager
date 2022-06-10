@@ -30,7 +30,10 @@ class UserUseCase:
         data = data.to_dict()
 
         cmd_create_user = (
-            'useradd --no-create-home ' '--shell /bin/false ' '--expiredate %s %s'
+            'useradd --no-create-home '
+            '--shell /bin/false '
+            '--expiredate %s %s '
+            '1>/dev/null 2>&1'
         ) % (data['expiration_date'].strftime('%Y-%m-%d'), data['username'])
 
         cmd_set_password = 'echo %s:%s | chpasswd' % (
