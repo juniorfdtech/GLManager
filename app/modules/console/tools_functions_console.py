@@ -65,6 +65,11 @@ class GLBackup(Backup):
 
 
 class SSHPlusRestoreBackup(RestoreBackup):
+    def check_exists_user(self, username: str) -> bool:
+        command = 'id {} >/dev/null 2>&1'
+        result = os.system(command.format(username))
+        return result == 0
+
     def get_limit_user(self, username: str) -> int:
         path = '/root/usuarios.db'
 
@@ -103,6 +108,9 @@ class SSHPlusRestoreBackup(RestoreBackup):
     def restore_users(self) -> None:
         path = '/etc/SSHPlus/senha/'
         for username in os.listdir(path):
+            if not self.check_exists_user(username):
+                return
+
             password = open(os.path.join(path, username), 'r').read().strip()
             limit = self.get_limit_user(username)
             expiration_date = self.get_expiration_date(username)
