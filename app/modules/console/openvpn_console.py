@@ -18,7 +18,7 @@ class OpenVPNActions:
             logger.error('Falha ao instalar OpenVPN!')
 
         Console.pause()
-        callback(status)
+        callback()
 
     @staticmethod
     def uninstall(callback: t.Callable) -> None:
@@ -31,7 +31,7 @@ class OpenVPNActions:
             logger.error('Falha ao desinstalar OpenVPN!')
 
         Console.pause()
-        callback(status)
+        callback()
 
     @staticmethod
     def start(callback: t.Callable) -> None:
@@ -44,7 +44,7 @@ class OpenVPNActions:
             logger.error('Falha ao iniciar OpenVPN!')
 
         Console.pause()
-        callback(status)
+        callback()
 
     @staticmethod
     def stop(callback: t.Callable) -> None:
@@ -57,7 +57,7 @@ class OpenVPNActions:
             logger.error('Falha ao parar OpenVPN!')
 
         Console.pause()
-        callback(status)
+        callback()
 
     @staticmethod
     def restart(callback: t.Callable) -> None:
@@ -70,7 +70,7 @@ class OpenVPNActions:
             logger.error('Falha ao reiniciar OpenVPN!')
 
         Console.pause()
-        callback(status)
+        callback()
 
     @staticmethod
     def change_port():
@@ -98,16 +98,12 @@ class OpenVPNActions:
 def openvpn_console_main() -> None:
     console = Console('OPENVPN Console')
 
-    def console_callback(is_restart) -> None:
-        if is_restart:
-            console.exit()
-            openvpn_console_main()
-
     if not OpenVPNManager.ovpn_utils.openvpn_is_installed():
         console.append_item(
             FuncItem(
                 'INSTALAR OPENVPN',
-                func=lambda: OpenVPNActions.install(console_callback),
+                func=lambda: OpenVPNActions.install(openvpn_console_main),
+                shuld_exit=True,
             )
         )
         console.show()
@@ -117,20 +113,22 @@ def openvpn_console_main() -> None:
         console.append_item(
             FuncItem(
                 'PARAR OPENVPN',
-                func=lambda: OpenVPNActions.stop(console_callback),
+                func=lambda: OpenVPNActions.stop(openvpn_console_main),
             )
         )
     else:
         console.append_item(
             FuncItem(
                 'INICIAR OPENVPN',
-                func=lambda: OpenVPNActions.start(console_callback),
+                func=lambda: OpenVPNActions.start(openvpn_console_main),
+                shuld_exit=True,
             )
         )
     console.append_item(
         FuncItem(
             'REINICIAR OPENVPN',
-            func=lambda: OpenVPNActions.restart(console_callback),
+            func=lambda: OpenVPNActions.restart(openvpn_console_main),
+            shuld_exit=True,
         )
     )
     console.append_item(
@@ -143,7 +141,8 @@ def openvpn_console_main() -> None:
     console.append_item(
         FuncItem(
             'DESINSTALAR OPENVPN',
-            func=lambda: OpenVPNActions.uninstall(console_callback),
+            func=lambda: OpenVPNActions.uninstall(openvpn_console_main),
+            shuld_exit=True,
         )
     )
     console.show()

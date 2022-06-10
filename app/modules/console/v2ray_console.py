@@ -29,7 +29,7 @@ class V2RayActions:
             logger.error('Falha ao instalar V2Ray!')
 
         Console.pause()
-        callback(status)
+        callback()
 
     @staticmethod
     def uninstall(callback: t.Callable) -> None:
@@ -42,7 +42,7 @@ class V2RayActions:
             logger.error('Falha ao desinstalar V2Ray!')
 
         Console.pause()
-        callback(status)
+        callback()
 
     @staticmethod
     def start(callback: t.Callable) -> None:
@@ -55,7 +55,7 @@ class V2RayActions:
             logger.error('Falha ao iniciar V2Ray!')
 
         Console.pause()
-        callback(status)
+        callback()
 
     @staticmethod
     def stop(callback: t.Callable) -> None:
@@ -68,7 +68,7 @@ class V2RayActions:
             logger.error('Falha ao parar V2Ray!')
 
         Console.pause()
-        callback(status)
+        callback()
 
     @staticmethod
     def restart(callback: t.Callable) -> None:
@@ -81,7 +81,7 @@ class V2RayActions:
             logger.error('Falha ao reiniciar V2Ray!')
 
         Console.pause()
-        callback(status)
+        callback()
 
     @staticmethod
     def change_port() -> None:
@@ -238,22 +238,45 @@ def v2ray_console_main():
     console = Console('V2Ray Manager')
     action = V2RayActions()
 
-    def console_callback(is_restart) -> None:
-        if is_restart:
-            console.exit()
-            v2ray_console_main()
-
     if not action.v2ray_manager.is_installed():
-        console.append_item(FuncItem('INSTALAR V2RAY', action.install, console_callback))
+        console.append_item(
+            FuncItem(
+                'INSTALAR V2RAY',
+                action.install,
+                v2ray_console_main,
+                shuld_exit=True,
+            )
+        )
         console.show()
         return
 
     if not V2RayManager.is_running():
-        console.append_item(FuncItem('INICIAR V2RAY', action.start, console_callback))
+        console.append_item(
+            FuncItem(
+                'INICIAR V2RAY',
+                action.start,
+                v2ray_console_main,
+                shuld_exit=True,
+            )
+        )
 
     if V2RayManager.is_running():
-        console.append_item(FuncItem('PARAR V2RAY', action.stop, console_callback))
-        console.append_item(FuncItem('REINICIAR V2RAY', action.restart, console_callback))
+        console.append_item(
+            FuncItem(
+                'PARAR V2RAY',
+                action.stop,
+                v2ray_console_main,
+                shuld_exit=True,
+            )
+        )
+        console.append_item(
+            FuncItem(
+                'REINICIAR V2RAY',
+                action.restart,
+                v2ray_console_main,
+                shuld_exit=True,
+            )
+        )
 
     console.append_item(FuncItem('ALTERAR PORTA', action.change_port))
     console.append_item(FuncItem('CRIAR NOVO UUID', action.create_uuid))
@@ -270,5 +293,12 @@ def v2ray_console_main():
         )
     )
     console.append_item(FuncItem('VER CONFIG. V2RAY', action.view_vless_config))
-    console.append_item(FuncItem('DESINSTALAR V2RAY', action.uninstall, console_callback))
+    console.append_item(
+        FuncItem(
+            'DESINSTALAR V2RAY',
+            action.uninstall,
+            v2ray_console_main,
+            shuld_exit=True,
+        )
+    )
     console.show()
