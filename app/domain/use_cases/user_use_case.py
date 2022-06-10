@@ -1,4 +1,5 @@
 import typing as t
+import datetime
 
 from app.data.repositories import UserRepository
 from app.domain.dtos import UserDto
@@ -11,7 +12,21 @@ class UserUseCase:
         self.user_repository = user_repository
 
     def create(self, user_dto: UserDto) -> t.Optional[UserDto]:
-        data = self.user_repository.create(User.of(user_dto.to_dict()))
+        expiration_date = user_dto.expiration_date
+
+        if isinstance(expiration_date, str):
+            try:
+                expiration_date = datetime.datetime.strptime(expiration_date, '%b %d, %Y')
+            except ValueError:
+                try:
+                    expiration_date = datetime.datetime.strptime(expiration_date, '%Y-%m-%d')
+                except ValueError:
+                    expiration_date = datetime.datetime.strptime(expiration_date, '%d/%m/%Y')
+
+        user_entity = User.of(user_dto.to_dict())
+        user_entity.expiration_date = expiration_date
+
+        data = self.user_repository.create(user_entity)
         data = data.to_dict()
 
         cmd_create_user = (
@@ -44,7 +59,19 @@ class UserUseCase:
         return [UserDto.of(item.to_dict()) for item in data]
 
     def update(self, user_dto: UserDto) -> t.Optional[UserDto]:
+        expiration_date = user_dto.expiration_date
+
+        if isinstance(expiration_date, str):
+            try:
+                expiration_date = datetime.datetime.strptime(expiration_date, '%b %d, %Y')
+            except ValueError:
+                try:
+                    expiration_date = datetime.datetime.strptime(expiration_date, '%Y-%m-%d')
+                except ValueError:
+                    expiration_date = datetime.datetime.strptime(expiration_date, '%d/%m/%Y')
+
         user_entity = User.of(user_dto.to_dict())
+        user_entity.expiration_date = expiration_date
         data = self.user_repository.update(user_entity)
         return UserDto.of(data.to_dict())
 

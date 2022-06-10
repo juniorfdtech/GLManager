@@ -6,6 +6,7 @@ from app.modules.console import (
     socks_console_main,
     v2ray_console_main,
     openvpn_console_main,
+    tools_console_main,
 )
 
 from console import Console, FuncItem
@@ -30,6 +31,7 @@ def main():
     console = Console('GERENCIADOR')
     console.append_item(FuncItem('GERENCIADOR DE USUÁRIOS', user_console_main))
     console.append_item(FuncItem('GERENCIADOR DE CONEXÕES', connection_choices))
+    console.append_item(FuncItem('GERENCIADOR DE FERRAMENTS', tools_console_main))
     console.append_item(FuncItem('GERENCIADOR DO PAINEL', input))
 
     try:
