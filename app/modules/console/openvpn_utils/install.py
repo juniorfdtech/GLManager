@@ -29,7 +29,7 @@ IP_ADDRESS = re.findall(
     re.MULTILINE,
 )[0]
 
-EASYRSA_VERSION = '3.1.0'
+EASYRSA_VERSION = '3.0.7'
 EASYRSA_NAME = 'EasyRSA-%s.tgz' % EASYRSA_VERSION
 EASYRSA_URL = 'https://github.com/OpenVPN/easy-rsa/releases/download/v%s/%s' % (
     EASYRSA_VERSION,
@@ -238,8 +238,7 @@ def build_easyrsa() -> None:
     os.system('%s --batch build-ca nopass 1>/dev/null 2>&1' % easyrsa)
     os.system('%s gen-dh 1>/dev/null 2>&1')
     os.system('%s build-server-full server nopass 1>/dev/null 2>&1' % easyrsa)
-    os.system('%s build-client-full GLTUNNEL nopass 1>/dev/null 2>&1' % easyrsa)
-    os.system('%s gen-crl 1>/dev/null 2>&1' % easyrsa)
+    os.system('EASYRSA_CRL_DAYS=3650 %s gen-crl 1>/dev/null 2>&1' % easyrsa)
     os.system(
         ' '.join(
             [
