@@ -1,5 +1,7 @@
 import sys
+import app.domain.entities
 
+from console import Console, FuncItem
 from app.modules.cli import user_cli_main
 from app.modules.console import (
     user_console_main,
@@ -9,8 +11,11 @@ from app.modules.console import (
     tools_console_main,
 )
 
-from console import Console, FuncItem
 from app.utilities.logger import logger
+from app.data.config import Base, DBConnection
+
+with DBConnection() as db:
+    Base.metadata.create_all(db.engine)
 
 
 def connection_choices():
