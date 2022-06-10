@@ -126,9 +126,12 @@ class SSHPlusRestoreBackup(RestoreBackup):
             if v2ray_uuid:
                 user_dto.v2ray_uuid = v2ray_uuid
 
-            repository = UserRepository()
-            use_case = UserUseCase(repository)
-            use_case.create(user_dto)
+            try:
+                repository = UserRepository()
+                use_case = UserUseCase(repository)
+                use_case.create(user_dto)
+            except Exception as e:
+                logger.error(e)
 
     def restore(self) -> None:
         logger.info('Restaurando SSHPlus...')
