@@ -1,6 +1,5 @@
 import typing as t
 import os
-import tarfile
 import json
 
 from console import Console, FuncItem

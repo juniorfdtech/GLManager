@@ -263,6 +263,7 @@ class UserMenuConsolePassword(UserMenuConsole):
         if not self._users:
             logger.error('Nenhum usuario foi encontrado.')
             self._console.pause()
+            self._console.exit()
             return
 
         for user in self._users:
@@ -287,6 +288,7 @@ class UserMenuConsoleConnectionLimit(UserMenuConsole):
         if not self._users:
             logger.error('Nenhum usuario foi encontrado.')
             self._console.pause()
+            self._console.exit()
             return
 
         for user in self._users:
@@ -311,6 +313,7 @@ class UserMenuConsoleExpirationDate(UserMenuConsole):
         if not self._users:
             logger.error('Nenhum usuario foi encontrado.')
             self._console.pause()
+            self._console.exit()
             return
 
         for user in self._users:
