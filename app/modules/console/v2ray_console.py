@@ -181,7 +181,7 @@ class V2RayActions:
 
         config = V2RayActions.v2ray_manager.config.load()
         type = config['inbounds'][0]['streamSettings']['network']
-        encryption = config['inbounds'][0]['streamSettings']['security']
+        encryption = config['inbounds'][0]['streamSettings'].get('security')
         protocol = config['inbounds'][0]['protocol']
 
         vless_link = vless_base_link.format(
