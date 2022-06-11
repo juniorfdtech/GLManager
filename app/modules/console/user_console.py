@@ -15,7 +15,7 @@ from app.data.repositories import UserRepository
 from .utils import UserMenuConsole
 
 from .v2ray_utils import V2rayUtils
-from .openvpn_utils import OpenVPNUtils
+from .ovpn_utils import OpenVPNUtils
 
 
 class UserInputData:

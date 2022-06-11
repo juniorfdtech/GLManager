@@ -2,7 +2,7 @@ import typing as t
 
 from console import Console, FuncItem
 from app.utilities.logger import logger
-from .openvpn_utils import OpenVPNManager
+from .ovpn_utils import OpenVPNManager
 
 
 class OpenVPNActions:
