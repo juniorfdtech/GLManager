@@ -1,5 +1,3 @@
-import os
-
 from setuptools import setup, find_packages
 from app import __version__, __author__, __email__
 
