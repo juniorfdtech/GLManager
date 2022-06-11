@@ -1,8 +1,11 @@
-import pytest
 import datetime
+
+from app.__main__ import create_all
 
 from app.data.repositories import UserRepository
 from app.domain.entities import User
+
+create_all()
 
 
 def test_user_repository_create_user():

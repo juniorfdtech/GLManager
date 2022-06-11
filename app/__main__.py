@@ -1,5 +1,4 @@
 import sys
-import app.domain.entities
 
 from console import Console, FuncItem
 from app.modules.cli import user_cli_main
@@ -10,12 +9,16 @@ from app.modules.console import (
     openvpn_console_main,
     tools_console_main,
 )
-
 from app.utilities.logger import logger
-from app.data.config import Base, DBConnection
 
-with DBConnection() as db:
-    Base.metadata.create_all(db.engine)
+
+def create_all():
+    import app.domain.entities
+
+    from app.data.config import Base, DBConnection
+
+    with DBConnection() as db:
+        Base.metadata.create_all(db.engine)
 
 
 def connection_choices():
@@ -29,6 +32,8 @@ def connection_choices():
 
 
 def main():
+    create_all()
+
     if len(sys.argv) > 1:
         user_cli_main(sys.argv[1:])
         return
