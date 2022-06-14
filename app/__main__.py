@@ -23,7 +23,8 @@ def create_all():
 
 def connection_choices():
     console = Console('GERENCIADOR DE CONEXÕES')
-    console.append_item(FuncItem('SOCKS', socks_console_main))
+    console.append_item(FuncItem('SOCKS HTTP', socks_console_main, 'http'))
+    console.append_item(FuncItem('SOCKS SSL', socks_console_main, 'https'))
     console.append_item(FuncItem('OPENVPN', openvpn_console_main))
     console.append_item(FuncItem('V2RAY', v2ray_console_main))
     console.append_item(FuncItem('BADUDP', input))

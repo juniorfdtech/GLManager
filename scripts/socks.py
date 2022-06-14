@@ -8,6 +8,7 @@ import logging
 
 from urllib.parse import urlparse
 from typing import List, Tuple, Union, Optional
+from enum import Enum
 
 __author__ = 'Glemison C. Dutra'
 __version__ = '1.0.2'
@@ -15,7 +16,40 @@ __version__ = '1.0.2'
 logger = logging.getLogger(__name__)
 
 DEFAULT_RESPONSE = b'HTTP/1.1 101 Connection Established\r\n\r\n'
-REMOTE_ADDRESS = ('0.0.0.0', 22)
+REMOTES_ADDRESS = {
+    'ssh': ('0.0.0.0', 22),
+    'openvpn': ('0.0.0.0.0', 1194),
+    'v2ray': ('0.0.0.0', 1080),
+}
+
+
+class RemoteTypes(Enum):
+    SSH = 'ssh'
+    OPENVPN = 'openvpn'
+    V2RAY = 'v2ray'
+
+
+class ParserType:
+    def __init__(self, data: bytes) -> None:
+        if not isinstance(data, bytes):
+            raise TypeError('data must be bytes')
+
+        self.data = data
+        self.type = None
+        self.address = None
+
+    def parse(self) -> None:
+        if self.data.startswith(b'\x00'):
+            self.type = RemoteTypes.OPENVPN
+            self.address = REMOTES_ADDRESS[self.type.value]
+
+        if self.data.startswith(b'\x04\x01'):
+            self.type = RemoteTypes.V2RAY
+            self.address = REMOTES_ADDRESS[self.type.value]
+
+        if self.data.startswith(b'SSH-'):
+            self.type = RemoteTypes.SSH
+            self.address = REMOTES_ADDRESS[self.type.value]
 
 
 class HttpParser:
@@ -161,6 +195,7 @@ class Proxy(threading.Thread):
         self.server = server
 
         self.http_parser = HttpParser()
+        self.parser_type = ParserType(bytes())
 
         self.__running = False
 
@@ -175,36 +210,41 @@ class Proxy(threading.Thread):
         self.__running = value
 
     def _process_request(self, data: bytes) -> None:
-        if self.server and not self.server.closed:
+        if self.parser_type.type is not None and self.server and not self.server.closed:
             self.server.queue(data)
             return
 
-        self.http_parser.parse(data)
+        self.parser_type.data = data
+        if self.parser_type.type is None:
+            self.parser_type.parse()
+
         host, port = (None, None)
+        if self.parser_type.type is not None:
+            host, port = self.parser_type.address
 
-        if self.http_parser.method == 'CONNECT':
-            host, port = self.http_parser.url.path.split(':')
+        if self.parser_type.type is None:
+            self.http_parser.parse(data)
 
-        elif self.http_parser.url.hostname or self.http_parser.headers.get('Host'):
-            host, port = (
-                self.http_parser.url.hostname
-                if not self.http_parser.headers.get('Host')
-                else self.http_parser.headers['Host'],
-                self.http_parser.url.port or REMOTE_ADDRESS[1],
-            )
+            if self.http_parser.method == 'CONNECT':
+                host, port = self.http_parser.url.path.split(':')
 
-        if not host or not port:
-            raise ValueError('Host or port is empty')
+        if host is not None and port is not None:
+            self.server = Server.of((host, int(port)))
+            self.server.connect()
 
-        self.server = Server.of((host, int(port)))
-        self.server.connect()
-
-        if self.http_parser.method == 'CONNECT' or str(port) == str(REMOTE_ADDRESS[1]):
+        if self.http_parser.method == 'CONNECT' or self.parser_type.type is None:
             self.client.queue(DEFAULT_RESPONSE)
-        else:
+        elif self.parser_type.type is not None and self.server and not self.server.closed:
+            self.server.queue(data)
+        elif self.server and not self.server.closed:
             self.server.queue(self.http_parser.build())
 
-        logger.debug(f'{self.client} -> Solicitação: {self.http_parser.build()}')
+        if self.parser_type.type:
+            logger.info(
+                f'{self.client} -> Modo {self.parser_type.type.value.upper()} - {host}:{port}'
+            )
+        else:
+            logger.info(f'{self.client} -> Solicitação: {self.http_parser.build()}')
 
     def _get_waitable_lists(self) -> Tuple[List[socket.socket]]:
         r, w, e = [self.client.conn], [], []
@@ -256,7 +296,7 @@ class Proxy(threading.Thread):
 
     def run(self) -> None:
         try:
-            logger.debug(f'{self.client} Conectado')
+            logger.info(f'{self.client} Conectado')
             self._process()
         except Exception as e:
             logger.exception(f'{self.client} Erro: {e}')
@@ -265,7 +305,7 @@ class Proxy(threading.Thread):
             if self.server and not self.server.closed:
                 self.server.close()
 
-            logger.debug(f'{self.client} Desconectado')
+            logger.info(f'{self.client} Desconectado')
 
 
 class TCP:
@@ -331,19 +371,15 @@ class HTTPS(TCP):
 
 
 def main():
-    global REMOTE_ADDRESS
-
     parser = argparse.ArgumentParser(description='Proxy', usage='%(prog)s [options]')
 
     parser.add_argument('--host', default='0.0.0.0', help='Host')
     parser.add_argument('--port', type=int, default=8080, help='Port')
     parser.add_argument('--backlog', type=int, default=5, help='Backlog')
-    parser.add_argument(
-        '-r',
-        '--remote',
-        default='%s:%d' % (REMOTE_ADDRESS),
-        help='Remote address, ex: 0.0.0.0:8080',
-    )
+    parser.add_argument('--openvpn-port', type=int, default=1194, help='OpenVPN Port')
+    parser.add_argument('--ssh-port', type=int, default=22, help='SSH Port')
+    parser.add_argument('--v2ray-port', type=int, default=1080, help='V2Ray Port')
+
     parser.add_argument('--cert', default='./cert.pem', help='Certificate')
 
     parser.add_argument('--http', action='store_true', help='HTTP')
@@ -354,8 +390,9 @@ def main():
 
     args = parser.parse_args()
 
-    if args.remote:
-        REMOTE_ADDRESS = args.remote.split(':')[0], int(args.remote.split(':')[1])
+    REMOTES_ADDRESS['openvpn'] = (args.host, args.openvpn_port)
+    REMOTES_ADDRESS['ssh'] = (args.host, args.ssh_port)
+    REMOTES_ADDRESS['v2ray'] = (args.host, args.v2ray_port)
 
     server = None
 
