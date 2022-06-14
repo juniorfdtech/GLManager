@@ -8,6 +8,15 @@ from .colors import COLOR_NAME, BG_COLOR_NAME, set_color
 from .utils import get_ip_address
 
 
+def get_app_version():
+    try:
+        import app
+
+        return app.__version__
+    except ImportError:
+        return 'Unknown'
+
+
 def clear_screen():
     os.system('clear' if os.name == 'nt' else 'cls')
 
@@ -79,7 +88,7 @@ ram_used = (
 RAM_INFO = (round(ram_total, 1), round(ram_used, 1))
 SYSTEM = ' '.join(linux_distribution()[0:2])
 
-BANNER = create_menu_bg('GLTUNNEL MANAGER') + '\n'
+BANNER = create_menu_bg('GLTUNNEL MANAGER v' + get_app_version()) + '\n'
 BANNER += set_color('OS: ', COLOR_NAME.RED) + set_color(SYSTEM, COLOR_NAME.GREEN).ljust(31)
 BANNER += set_color('BY: ', COLOR_NAME.RED) + set_color('@Dutra01', COLOR_NAME.GREEN).ljust(27)
 BANNER += (
