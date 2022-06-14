@@ -43,10 +43,9 @@ class GLUpdate:
         os.chdir(os.path.expanduser('~'))
 
         if os.path.exists('GLManager'):
-            os.system('git pull')
-        else:
-            os.system('git clone ' + self.repository_url)
+            os.system('rm -rf GLManager')
 
+        os.system('git clone ' + self.repository_url)
         os.chdir('GLManager')
         os.system('pip3 install -r requirements.txt')
         os.system('python3 setup.py install')
@@ -59,7 +58,7 @@ class GLUpdate:
 def check_update() -> None:
     gl_update = GLUpdate()
     if gl_update.check_update():
-        
+
         result = input(COLOR_NAME.YELLOW + 'Deseja atualizar? (S/N) ' + COLOR_NAME.RESET)
 
         if result.upper() == 'S':
