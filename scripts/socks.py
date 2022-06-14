@@ -39,12 +39,13 @@ class ParserType:
         self.address = None
 
     def parse(self) -> None:
+        if self.data.startswith(b'\x00\x02ed\x89'):
+            self.type = RemoteTypes.V2RAY
+            self.address = REMOTES_ADDRESS[self.type.value]
+            return
+
         if self.data.startswith(b'\x00'):
             self.type = RemoteTypes.OPENVPN
-            self.address = REMOTES_ADDRESS[self.type.value]
-
-        if self.data.startswith(b'\x04\x01'):
-            self.type = RemoteTypes.V2RAY
             self.address = REMOTES_ADDRESS[self.type.value]
 
         if self.data.startswith(b'SSH-'):
