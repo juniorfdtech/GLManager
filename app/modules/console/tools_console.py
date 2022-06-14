@@ -1,14 +1,71 @@
 import typing as t
 import os
 import json
+import re
 
-from console import Console, FuncItem
+from console import Console, FuncItem, COLOR_NAME
 
 from app.data.repositories import UserRepository
 from app.domain.dtos import UserDto
 from app.domain.use_cases import UserUseCase
 
 from app.utilities.logger import logger
+from app import __version__
+
+
+class GLUpdate:
+    def __init__(self):
+        self.repository_url = 'https://github.com/DuTra01/GLManager.git'
+        self.version_url = (
+            'https://raw.githubusercontent.com/DuTra01/GLManager/master/app/__init__.py'
+        )
+
+    def check_update(self) -> bool:
+        data = os.popen('curl -sL ' + self.version_url).read().strip()
+        pattern = re.compile(r'__version__ = \'(.*)\'')
+        match = pattern.search(data)
+
+        if not match:
+            return False
+
+        version = match.group(1)
+        if version == __version__:
+            logger.warn('Nao foi encontrado atualizacoes')
+            return False
+
+        logger.success('Foi encontrada uma atualizacao')
+        logger.success('Versao atual: ' + __version__)
+        logger.success('Versao nova: ' + version)
+
+        return True
+
+    def update(self) -> None:
+        os.chdir('~/')
+
+        if os.path.exists('GLManager'):
+            os.system('git pull')
+        else:
+            os.system('git clone ' + self.repository_url)
+
+        os.chdir('GLManager')
+        os.system('pip3 install -r requirements.txt')
+        os.system('python3 setup.py install')
+
+        logger.success('Atualizacao realizada com sucesso')
+        logger.success('Execute: `vps` para entrar no menu')
+        exit(0)
+
+
+def check_update() -> None:
+    gl_update = GLUpdate()
+    if gl_update.check_update():
+        
+        result = input(COLOR_NAME.YELLOW + 'Deseja atualizar? (S/N) ' + COLOR_NAME.RESET)
+
+        if result.upper() == 'S':
+            gl_update.update()
+
+    Console.pause()
 
 
 class Backup:
@@ -186,7 +243,7 @@ def choice_restore_backup() -> None:
 
 def tools_console_main() -> None:
     console = Console('GERENCIADOR DE FERRAMENTAS')
-    console.append_item(FuncItem('VERFICAR ATUALIZAÇÕES', input))
+    console.append_item(FuncItem('VERFICAR ATUALIZAÇÕES', check_update))
     console.append_item(FuncItem('CRIAR BACKUP', input))
     console.append_item(FuncItem('RESTAURAR BACKUP', choice_restore_backup))
 

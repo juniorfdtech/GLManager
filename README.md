@@ -38,7 +38,20 @@ cd GLManager
 python3 setup.py install
 ```
 
-* Execute o script
+## Atualize o script
+```
+pip3 install --upgrade git+https://github.com/DuTra01/GLManager.git
+```
+#### Ou
+```
+cd ~/
+rm -rf GLManager
+git clone git+https://github.com/DuTra01/GLManager.git
+cd GLManager
+python3 setup.py install
+```
+
+* Comando de execucao
 ```
 vps
 ```
