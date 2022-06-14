@@ -40,7 +40,7 @@ class GLUpdate:
         return True
 
     def update(self) -> None:
-        os.chdir('~/')
+        os.chdir(os.path.expanduser('~'))
 
         if os.path.exists('GLManager'):
             os.system('git pull')
