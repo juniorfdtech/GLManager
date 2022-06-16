@@ -4,7 +4,8 @@ import re
 from urllib.request import urlopen
 from console import Console, FuncItem, COLOR_NAME
 
-from ..utils import logger
+from app.utilities.logger import logger
+from app.utilities.utils import get_ip_address
 
 
 RCLOCAL = '/etc/rc.local'
@@ -23,11 +24,13 @@ CLIENT_COMMON_CONFIG = os.path.join(OPENVPN_PATH, 'client-common.txt')
 
 ROOT_PATH = os.path.expanduser('~')
 
-IP_ADDRESS = re.findall(
+__list_of_ip = re.findall(
     r'^\s+inet\s+(\d+\.\d+\.\d+\.\d+)\/\d+.*scope\s+global.*$',
     os.popen('ip -4 addr').read(),
     re.MULTILINE,
-)[0]
+)
+
+IP_ADDRESS = __list_of_ip[0] if __list_of_ip else get_ip_address()
 
 EASYRSA_VERSION = '3.0.7'
 EASYRSA_NAME = 'EasyRSA-%s.tgz' % EASYRSA_VERSION

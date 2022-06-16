@@ -10,14 +10,14 @@ from app.domain.dtos import UserDto
 from app.domain.use_cases import UserUseCase
 
 from app.utilities.logger import logger
-from app import __version__
+from app.version import __version__
 
 
 class GLUpdate:
     def __init__(self):
         self.repository_url = 'https://github.com/DuTra01/GLManager.git'
         self.version_url = (
-            'https://raw.githubusercontent.com/DuTra01/GLManager/master/app/__init__.py'
+            'https://raw.githubusercontent.com/DuTra01/GLManager/master/app/version.py'
         )
 
     def check_update(self) -> bool:
@@ -44,6 +44,8 @@ class GLUpdate:
 
         if os.path.exists('GLManager'):
             os.system('rm -rf GLManager')
+
+        os.system('echo \'y\' | pip3 uninstall GLManager') 
 
         os.system('git clone ' + self.repository_url)
         os.chdir('GLManager')

@@ -6,8 +6,6 @@ def pause(text='\nEnter para continuar'):
 
 
 def get_ip_address():
-    import urllib.request as request
-
     path = os.path.join(os.path.expanduser('~'), '.ip')
 
     if os.path.exists(path):
@@ -15,9 +13,14 @@ def get_ip_address():
             return f.read().strip()
 
     try:
-        url = 'https://api.ipify.org'
-        response = request.urlopen(url)
-        ip = response.read().decode('utf-8')
+        import socket
+
+        host = 'api.ipify.org'
+        port = 80
+
+        soc = socket.create_connection((host, port))
+        soc.send(b'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % host.encode('utf-8'))
+        ip = soc.recv(4096).decode('utf-8').split('\r\n')[-1]
 
         with open(path, 'w') as f:
             f.write(ip.strip())

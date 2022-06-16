@@ -10,9 +10,9 @@ from .utils import get_ip_address
 
 def get_app_version():
     try:
-        import app
+        from app import version
 
-        return app.__version__
+        return version.__version__
     except ImportError:
         return 'Unknown'
 

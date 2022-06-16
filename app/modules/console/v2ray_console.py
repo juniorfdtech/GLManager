@@ -4,7 +4,7 @@ from console import Console, FuncItem, COLOR_NAME
 from console.formatter import create_menu_bg, create_line
 
 from app.utilities.logger import logger
-from app.utilities.utils import get_ip
+from app.utilities.utils import get_ip_address
 
 from app.data.repositories import UserRepository
 from app.domain.use_cases import UserUseCase
@@ -176,7 +176,7 @@ class V2RayActions:
     def view_vless_config() -> None:
         vless_base_link = 'vless://@{}:{}?encryption={}&type={}#{}'
 
-        ip_address = get_ip()
+        ip_address = get_ip_address()
         port = V2RayActions.v2ray_manager.get_running_port()
 
         config = V2RayActions.v2ray_manager.config.load()

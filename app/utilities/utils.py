@@ -1,3 +1,4 @@
+import os
 import typing as t
 import urllib.request
 
@@ -60,10 +61,27 @@ def date_to_datetime(date: str) -> datetime:
             return datetime.strptime(date, '%Y-%m-%d')
 
 
-def get_ip() -> str:
-    my_ip = ""
+def get_ip_address():
+    path = os.path.join(os.path.expanduser('~'), '.ip')
+
+    if os.path.exists(path):
+        with open(path, 'r') as f:
+            return f.read().strip()
+
     try:
-        my_ip = urllib.request.urlopen('http://api.ipify.org').read()
-    except Exception:
-        my_ip = urllib.request.urlopen('http://icanhazip.com').read()
-    return bytes.decode(my_ip).strip()
+        import socket
+
+        host = 'api.ipify.org'
+        port = 80
+
+        soc = socket.create_connection((host, port))
+        soc.send(b'GET / HTTP/1.1\r\nHost: %s\r\n\r\n' % host.encode('utf-8'))
+        ip = soc.recv(4096).decode('utf-8').split('\r\n')[-1]
+
+        with open(path, 'w') as f:
+            f.write(ip.strip())
+
+        return ip.strip()
+
+    except Exception as e:
+        return '0.0.0.0'

@@ -32,7 +32,7 @@ config_string = '''
   "inbounds": [
     {
       "listen": null,
-      "port": 5555,
+      "port": 1080,
       "protocol": "vless",
       "settings": {
         "clients": [],
@@ -43,7 +43,7 @@ config_string = '''
         "network": "tcp",
         "security": "none"
       },
-      "tag": "inbound-5555",
+      "tag": "inbound-1080",
       "sniffing": {
         "enabled": true,
         "destOverride": [
