@@ -11,13 +11,3 @@ def test_badvpn_flag_flag():
 
     assert flag.flag == '--listen-addr 127.0.0.1:7300 --max-clients 1100'
     assert flag.command() == '/usr/bin/badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1100'
-
-
-def test_start_badvpn_screen_manager():
-    flag = BadvpnFlag(
-        listen_addr='127.0.0.1:7300',
-        max_clients=1100,
-    )
-
-    screen_manager = BadvpnScreenManager(flag)
-    assert screen_manager.start()
