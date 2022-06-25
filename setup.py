@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
-from app import __version__, __author__, __email__
+from app import __author__, __email__
+from app.version import __version__
 
 
 PACKAGES = find_packages() + ['scripts']
