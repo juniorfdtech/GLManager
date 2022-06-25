@@ -8,5 +8,6 @@ RUN pip install -r requirements.txt
 COPY ./app ./app
 COPY ./console ./console
 COPY ./scripts ./scripts
+COPY ./tests ./tests
 
 CMD ["python3", "-m", "app"]

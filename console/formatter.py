@@ -2,7 +2,6 @@
 
 import os
 import time
-import platform
 
 from .colors import COLOR_NAME, BG_COLOR_NAME, set_color
 from .utils import get_ip_address
@@ -22,15 +21,18 @@ def clear_screen():
 
 
 def linux_distribution():
-    try:
-        return platform.linux_distribution()
-    except:
-        try:
-            import distro
+    path = '/etc/os-release'
 
-            return distro.linux_distribution()
-        except:
-            return 'Unknown'
+    if os.path.exists(path):
+        data = open(path).read().strip()
+        data_dict = dict(line.split('=') for line in data.splitlines())
+
+        name = data_dict.get('ID', 'Unknown').replace('"', '').upper()
+        version = data_dict.get('VERSION_ID', 'Unknown').replace('"', '')
+
+        return '%s %s' % (name, version)
+
+    return 'Unknown'
 
 
 def create_line(size=50, type='━', color=COLOR_NAME.GREEN, show=True):
@@ -86,7 +88,7 @@ ram_used = (
 )
 
 RAM_INFO = (round(ram_total, 1), round(ram_used, 1))
-SYSTEM = ' '.join(linux_distribution()[0:2])
+SYSTEM = linux_distribution()
 
 BANNER = create_menu_bg('GLTUNNEL MANAGER v' + get_app_version()) + '\n'
 BANNER += set_color('OS: ', COLOR_NAME.RED) + set_color(SYSTEM, COLOR_NAME.GREEN).ljust(31)

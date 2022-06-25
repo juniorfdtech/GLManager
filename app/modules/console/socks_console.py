@@ -219,64 +219,6 @@ class ConsoleMode:
         return cls().start()
 
 
-class ConsolePort:
-    def __init__(self, title: str = 'SELECIONE UMA PORTA') -> None:
-        self._title = title
-        self._console = Console(title)
-        self._current_port_selected = None
-        self._current_mode_selected = None
-
-    @property
-    def current_port_selected(self) -> int:
-        if self._current_port_selected is None:
-            self._current_port_selected = self.show()
-
-        return self._current_port_selected
-
-    @property
-    def current_mode_selected(self) -> str:
-        if self._current_mode_selected is None:
-            self.show()
-
-        return self._current_mode_selected
-
-    def _set_port_mode_selected(self, port: int, mode: str) -> None:
-        self._current_port_selected = port
-        self._current_mode_selected = mode
-        self._console.exit()
-
-    def _create_menu(self) -> None:
-        self._console.items.clear()
-
-        socks = SocksManager.get_running_socks()
-
-        if not socks:
-            logger.error('Nenhuma porta ativa')
-            return
-
-        width = self.width([i for x in socks.items() for i in x])
-        for port, mode in socks.items():
-            item = FuncItem(
-                '%s - %s' % (str(port).ljust(width), mode),
-                self._set_port_mode_selected,
-                str(port),
-                mode,
-            )
-            self._console.items.append(item)
-
-        self._console.items.append(FuncItem('Sair', self._console.exit))
-
-    def width(self, ports: t.List[t.Any]) -> int:
-        return max(len(str(port)) for port in ports)
-
-    def show(self) -> int:
-        if self._current_port_selected is None:
-            self._create_menu()
-            self._console.show()
-
-        return self._current_port_selected
-
-
 class FormatterSocks(Formatter):
     def __init__(self, port: int, mode: str) -> None:
         super().__init__()

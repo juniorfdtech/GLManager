@@ -5,6 +5,7 @@ from app.modules.cli import user_cli_main
 from app.modules.console import (
     user_console_main,
     socks_console_main,
+    badvpn_console_main,
     v2ray_console_main,
     openvpn_console_main,
     tools_console_main,
@@ -27,7 +28,7 @@ def connection_choices():
     console.append_item(FuncItem('SOCKS SSL', socks_console_main, 'https'))
     console.append_item(FuncItem('OPENVPN', openvpn_console_main))
     console.append_item(FuncItem('V2RAY', v2ray_console_main))
-    console.append_item(FuncItem('BADUDP', input))
+    console.append_item(FuncItem('BADUDP', badvpn_console_main))
 
     console.show()
 
