@@ -5,6 +5,7 @@ import threading
 import os
 import argparse
 import logging
+import resource
 
 from urllib.parse import urlparse
 from typing import List, Tuple, Union, Optional
@@ -12,6 +13,8 @@ from enum import Enum
 
 __author__ = 'Glemison C. Dutra'
 __version__ = '1.0.2'
+
+resource.setrlimit(resource.RLIMIT_NOFILE, (65536, 65536))
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +24,44 @@ REMOTES_ADDRESS = {
     'openvpn': ('0.0.0.0.0', 1194),
     'v2ray': ('0.0.0.0', 1080),
 }
+
+
+class Counter:
+    def __init__(self):
+        self.__count = 0
+
+    def increment(self):
+        self.__count += 1
+
+    def decrement(self):
+        self.__count -= 1
+
+    @property
+    def count(self):
+        return self.__count
+
+
+class ConnectionCounter:
+    __counter = Counter()
+    __lock = threading.Lock()
+
+    @classmethod
+    def increment(cls):
+        with cls.__lock:
+            cls.__counter.increment()
+
+    @classmethod
+    def decrement(cls):
+        with cls.__lock:
+            cls.__counter.decrement()
+
+    @classmethod
+    def count(cls):
+        with cls.__lock:
+            return cls.__counter.count
+
+
+connection_counter = ConnectionCounter()
 
 
 class RemoteTypes(Enum):
