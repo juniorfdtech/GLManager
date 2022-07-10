@@ -8,6 +8,7 @@ from app.domain.dtos import UserDto
 from app.utilities.validators import UserValidator
 
 from .bot import bot
+from .permissons import AdminPermission, permission_required
 
 
 def message_help() -> str:
@@ -40,6 +41,7 @@ def send_help(message: Message):
 
 
 @bot.message_handler(regexp='/create_user (\w+) (\w+) (\d+) (\d+)')
+@permission_required(AdminPermission())
 def create_user(message: Message):
     username = message.text.split(' ')[1]
     password = message.text.split(' ')[2]
@@ -100,6 +102,7 @@ def create_user(message: Message):
 
 
 @bot.message_handler(regexp='/delete_user (\w+)')
+@permission_required(AdminPermission())
 def delete_user(message: Message):
     username = message.text.split(' ')[1]
 
@@ -120,6 +123,7 @@ def delete_user(message: Message):
 
 
 @bot.message_handler(regexp='/list_users')
+@permission_required(AdminPermission())
 def list_users(message: Message):
     user_use_case = UserUseCase(UserRepository())
     users = user_use_case.get_all()
@@ -149,6 +153,7 @@ def list_users(message: Message):
 
 
 @bot.message_handler(regexp='/get_user (\w+)')
+@permission_required(AdminPermission())
 def get_user(message: Message):
     username = message.text.split(' ')[1]
 
