@@ -21,4 +21,5 @@ def get_bot_token():
 
 
 def get_admin_id():
-    return parser.get('admin_id')
+    admin_id = parser.get('admin_id')
+    return int(admin_id) if admin_id else None
