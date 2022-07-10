@@ -32,6 +32,7 @@ setup(
     entry_points={
         'console_scripts': [
             'vps = app.__main__:main',
+            'bot = bot.__main__:main',
         ],
     },
 )

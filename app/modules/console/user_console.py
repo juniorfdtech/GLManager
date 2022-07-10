@@ -216,7 +216,7 @@ class UserManager:
     def show_message_user_created(user: t.Dict[str, t.Any]):
         Console.clear_screen()
 
-        line = create_menu_bg('Usuário criado com sucesso!')
+        line = create_menu_bg('Usuário criado com sucesso!'.upper())
         line += '\n'
         line += COLOR_NAME.YELLOW + 'Nome de usuário: ' + COLOR_NAME.RESET + user['username'] + '\n'
         line += COLOR_NAME.YELLOW + 'Senha: ' + COLOR_NAME.RESET + user['password'] + '\n'
@@ -509,7 +509,9 @@ class UserAction:
         width = max(len(user['username']) for user in users)
         width_username = width if width > 7 else 7
 
-        message = (
+        Console.clear_screen()
+
+        print(
             create_menu_bg(
                 (
                     ' | '.join(
@@ -522,7 +524,6 @@ class UserAction:
                 ),
                 set_pars=False,
             )
-            + '\n'
         )
 
         for user in users:
@@ -530,32 +531,31 @@ class UserAction:
 
             count = count_connections(user_dto.username)
 
-            message += ' {} | {} | {}\n'.format(
-                COLOR_NAME.GREEN + user_dto.username.ljust(width_username) + COLOR_NAME.RESET,
-                str(
-                    '%s%02d/%s%02d%s'
+            print(
+                ' {} | {} | {}'.format(
+                    COLOR_NAME.GREEN + user_dto.username.ljust(width_username) + COLOR_NAME.RESET,
+                    str(
+                        '%s%02d/%s%02d%s'
+                        % (
+                            COLOR_NAME.GREEN if count > 0 else COLOR_NAME.RED,
+                            count,
+                            COLOR_NAME.GREEN,
+                            user_dto.connection_limit,
+                            COLOR_NAME.RESET,
+                        )
+                    )
+                    .rjust(30)
+                    .ljust(36),
+                    '%s%s%s'
                     % (
                         COLOR_NAME.GREEN,
-                        user_dto.connection_limit,
-                        COLOR_NAME.GREEN if count > 0 else COLOR_NAME.RED,
-                        count,
+                        user_dto.expiration_date.strftime('%d/%m/%Y').rjust(15),
                         COLOR_NAME.RESET,
-                    )
+                    ),
                 )
-                .rjust(30)
-                .ljust(36),
-                '%s%s%s'
-                % (
-                    COLOR_NAME.GREEN,
-                    user_dto.expiration_date.strftime('%d/%m/%Y').rjust(15),
-                    COLOR_NAME.RESET,
-                ),
             )
+            print(create_line(show=False) + '\n')
 
-            message += create_line(show=False) + '\n'
-
-        Console.clear_screen()
-        print(message)
         Console.pause()
 
 

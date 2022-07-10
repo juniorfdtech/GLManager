@@ -1,3 +1,5 @@
 sqlalchemy
 pytest
 distro
+pytelegrambotapi
+python-daemon
