@@ -3,8 +3,17 @@ import argparse
 from bot.bot_config import set_admin_id, set_bot_token, get_admin_id, get_bot_token
 
 parser = argparse.ArgumentParser(description='Helper for the bot')
-parser.add_argument('--set-token', dest='token', help='Set the bot token')
-parser.add_argument('--set-admin', dest='admin', help='Set the admin id')
+parser.add_argument(
+    '--set-token',
+    dest='token',
+    help='Set the bot token',
+)
+parser.add_argument(
+    '--set-admin',
+    dest='admin',
+    help='Set the admin id',
+    type=int,
+)
 
 parser.add_argument('--get-token', dest='get_token', action='store_true', help='Get the bot token')
 parser.add_argument('--get-admin', dest='get_admin', action='store_true', help='Get the admin id')
@@ -67,7 +76,7 @@ def main():
         set_bot_token('')
 
     if args.delete_admin:
-        set_admin_id('')
+        set_admin_id(-1)
 
     if args.edit_config:
         import os

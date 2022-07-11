@@ -80,4 +80,9 @@ class UserUseCase:
 
     def delete(self, id: int) -> t.Optional[UserDto]:
         data = self.user_repository.delete(id)
+
+        if data:
+            cmd_delete_user = 'userdel --force %s 1>/dev/null 2>&1' % data.username
+            exec_command(cmd_delete_user)
+
         return UserDto.of(data.to_dict())

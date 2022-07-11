@@ -206,10 +206,6 @@ class UserManager:
     def delete_user(self) -> t.Dict[str, t.Any]:
         user = self._user_use_case.get_by_username(self._user_input_data.username)
         self._user_use_case.delete(user.id)
-
-        cmd = 'userdel --force %s' % user.username
-        exec_command(cmd)
-
         return user.to_dict()
 
     @staticmethod

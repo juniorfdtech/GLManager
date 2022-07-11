@@ -6,12 +6,18 @@ BOT_TOKEN = parser.get('bot_token')
 ADMIN_ID = parser.get('admin_id')
 
 
-def set_bot_token(token):
+def set_bot_token(token: str):
+    if not isinstance(token, str):
+        raise ValueError('Bot token must be a string')
+
     parser.set('bot_token', token)
     parser.save()
 
 
-def set_admin_id(id):
+def set_admin_id(id: int):
+    if not isinstance(id, int):
+        raise ValueError('Admin ID must be an integer')
+
     parser.set('admin_id', id)
     parser.save()
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from .logger import logger
 from .utils import find_user_by_name
 
@@ -72,6 +72,9 @@ class UserValidator:
         if not date:
             logger.error('Data de expiração não informada')
             return False
+
+        if isinstance(date, str) and date.isdigit() and int(date) > 1:
+            date = datetime.now() + timedelta(days=int(date))
 
         try:
             if not isinstance(date, datetime):
