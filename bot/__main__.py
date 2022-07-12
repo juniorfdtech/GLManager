@@ -4,7 +4,6 @@ import importlib
 from . import bot
 
 from .config import set_admin_id, set_bot_token, get_admin_id, get_bot_token
-from .utilities.daemon import Daemon
 from .commands import ALL_MODULES
 
 parser = argparse.ArgumentParser(description='Helper for the bot')
@@ -35,15 +34,12 @@ parser.add_argument(
     action='store_true',
     help='Delete the admin id',
 )
-parser.add_argument('--start', dest='start', action='store_true', help='Start the bot')
+parser.add_argument('--run', dest='run', action='store_true', help='Run the bot in foreground')
+parser.add_argument(
+    '--start', dest='start', action='store_true', help='Start the bot in background (screen)'
+)
 parser.add_argument('--stop', dest='stop', action='store_true', help='Stop the bot')
 parser.add_argument('--status', dest='status', action='store_true', help='Status of the bot')
-parser.add_argument(
-    '--daemon',
-    dest='daemon',
-    action='store_true',
-    help='Run the bot as a daemon (Linux only)',
-)
 parser.add_argument(
     '--pidfile',
     dest='pidfile',
@@ -54,21 +50,50 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-class BotDaemon(Daemon):
-    def __init__(self):
-        super().__init__(pidfile=args.pidfile)
-
-    def run(self):
-        for module in ALL_MODULES:
-            try:
-                importlib.import_module('.commands.' + module, 'bot')
-            except ImportError:
-                pass
-
-        bot.infinity_polling()
+def load_modules():
+    for module in ALL_MODULES:
+        try:
+            importlib.import_module('.commands.' + module, 'bot')
+        except ImportError:
+            pass
 
 
-bot_daemon = BotDaemon()
+def start_bot_in_background():
+    import os
+
+    if os.system('command -v screen > /dev/null') != 0:
+        print('screen is not installed')
+        print('Install it with "apt install screen"')
+        return
+
+    if os.system('screen -ls | grep bot > /dev/null') == 0:
+        print('Bot is already running')
+        return
+
+    command = 'screen -dmS bot python3 -m bot --run'
+    os.system(command)
+
+
+def start_bot_in_foreground():
+    load_modules()
+
+    bot.infinity_polling()
+
+
+def stop_bot():
+    import os
+
+    if os.system('command -v screen > /dev/null') != 0:
+        print('screen is not installed')
+        print('Install it with "apt install screen"')
+        return
+
+    if os.system('screen -ls | grep bot > /dev/null') != 0:
+        print('Bot is not running')
+        return
+
+    command = 'screen -S bot -X quit'
+    os.system(command)
 
 
 def main():
@@ -93,18 +118,14 @@ def main():
     if args.delete_admin:
         set_admin_id(-1)
 
+    if args.run:
+        start_bot_in_foreground()
+
     if args.start:
-        if args.daemon:
-            bot_daemon.start()
-        else:
-            bot_daemon.run()
+        start_bot_in_background()
 
     if args.stop:
-        bot_daemon.stop()
-        return
-
-    if args.status:
-        bot_daemon.is_running()
+        stop_bot()
 
 
 if __name__ == '__main__':
