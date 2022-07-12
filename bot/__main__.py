@@ -105,8 +105,6 @@ def main():
         execute()
 
     if args.stop:
-        from .utilities.daemon import Daemon
-
         daemon = Daemon(pidfile=args.pidfile)
         daemon.stop()
         return
