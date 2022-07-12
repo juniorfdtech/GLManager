@@ -17,6 +17,9 @@ class DealerDTO:
             if hasattr(self, key):
                 setattr(self, key, value)
 
+    def __repr__(self):
+        return str(self.to_dict())
+
     def to_dict(self) -> dict:
         return {
             'id': self.id,

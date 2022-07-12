@@ -7,6 +7,5 @@ if BOT_TOKEN is None:
 
 bot = telebot.TeleBot(
     BOT_TOKEN,
-    skip_pending=True,
     parse_mode='HTML',
 )

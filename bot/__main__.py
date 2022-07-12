@@ -1,6 +1,8 @@
 import argparse
 import importlib
 
+from . import bot
+
 from .config import set_admin_id, set_bot_token, get_admin_id, get_bot_token
 from .utilities.daemon import Daemon
 from .commands import ALL_MODULES
@@ -33,36 +35,44 @@ parser.add_argument(
     action='store_true',
     help='Delete the admin id',
 )
-
-parser.add_argument(
-    '--edit-config',
-    dest='edit_config',
-    action='store_true',
-    help='Edit the config file',
-)
-
 parser.add_argument('--start', dest='start', action='store_true', help='Start the bot')
 parser.add_argument('--stop', dest='stop', action='store_true', help='Stop the bot')
+parser.add_argument('--status', dest='status', action='store_true', help='Status of the bot')
 parser.add_argument(
-    '--daemon', dest='daemon', action='store_true', help='Run the bot as a daemon (Linux only)'
+    '--daemon',
+    dest='daemon',
+    action='store_true',
+    help='Run the bot as a daemon (Linux only)',
 )
 parser.add_argument(
-    '--pidfile', dest='pidfile', help='Set the pid file (Linux only)', default='/tmp/bot.pid'
+    '--pidfile',
+    dest='pidfile',
+    help='Set the pid file (Linux only)',
+    default='/tmp/bot.pid',
 )
 
 args = parser.parse_args()
 
 
-def execute():
-    from . import bot
+class BotDaemon(Daemon):
+    def __init__(self):
+        super().__init__(pidfile=args.pidfile)
 
-    for module in ALL_MODULES:
-        importlib.import_module('.commands.' + module, 'bot')
+    def run(self):
+        for module in ALL_MODULES:
+            try:
+                importlib.import_module('.commands.' + module, 'bot')
+            except ImportError:
+                pass
 
-    bot.infinity_polling()
+        bot.infinity_polling()
+
+
+bot_daemon = BotDaemon()
 
 
 def main():
+
     args = parser.parse_args()
 
     if args.token:
@@ -83,31 +93,18 @@ def main():
     if args.delete_admin:
         set_admin_id(-1)
 
-    if args.edit_config:
-        import os
-
-        os.system('nano /etc/GLManager/config.json')
-
     if args.start:
         if args.daemon:
-
-            class BotDaemon(Daemon):
-                def __init__(self):
-                    super().__init__(pidfile=args.pidfile)
-
-                def run(self):
-                    execute()
-
-            daemon = BotDaemon()
-            daemon.start()
-            return
-
-        execute()
+            bot_daemon.start()
+        else:
+            bot_daemon.run()
 
     if args.stop:
-        daemon = Daemon(pidfile=args.pidfile)
-        daemon.stop()
+        bot_daemon.stop()
         return
+
+    if args.status:
+        bot_daemon.is_running()
 
 
 if __name__ == '__main__':

@@ -17,7 +17,6 @@ class DBConnection:
         self.__engine = create_engine(self.__uri)
         self.__session = None
 
-        # BASE.metadata.bind = self.__engine
         BASE.metadata.create_all(self.__engine)
 
     @property

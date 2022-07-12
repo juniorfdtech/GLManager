@@ -1,5 +1,5 @@
 sqlalchemy
 pytest
 distro
-pytelegrambotapi
+pytelegrambotapi==4.6.0
 python-daemon
