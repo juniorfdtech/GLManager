@@ -10,37 +10,7 @@ from app.utilities.validators import UserValidator
 from .. import bot
 from ..utilities.utils import callback_query_back_menu
 from ..middleware import AdminPermission, DealerPermission, permission_required
-
-from ..dealer import DealerRepository, DealerUseCase, AccountRepository, AccountUseCase, AccountDTO
-
-
-def isDealer(user_id: int) -> bool:
-    dealer_use_case = DealerUseCase(DealerRepository())
-    return dealer_use_case.get_by_id(user_id) is not None
-
-
-def has_limit_available(user_id: int) -> bool:
-    dealer_use_case = DealerUseCase(DealerRepository())
-    dealer_dto = dealer_use_case.get_by_id(user_id)
-
-    if not dealer_dto:
-        return False
-
-    return dealer_dto.account_creation_limit > 0
-
-
-def decrement_account_creation_limit(user_id: int, account_id: int):
-    dealer_use_case = DealerUseCase(DealerRepository())
-    dealer_dto = dealer_use_case.get_by_id(user_id)
-
-    if not dealer_dto:
-        return
-
-    dealer_dto.account_creation_limit -= 1
-    dealer_use_case.update(dealer_dto)
-
-    account_use_case = AccountUseCase(AccountRepository())
-    account_use_case.create(AccountDTO(id=account_id, dealer_id=user_id))
+from .helpers.dealer import is_dealer, decrement_account_creation_limit, has_limit_available
 
 
 def send_message_user_created(message: types.Message, user_created: UserDto):
@@ -66,10 +36,11 @@ def send_message_user_created(message: types.Message, user_created: UserDto):
 @permission_required([AdminPermission(), DealerPermission()])
 def callback_query_create_user(query: types.CallbackQuery):
     user_id = query.from_user.id
-    if isDealer(user_id) and not has_limit_available(user_id):
+    if is_dealer(user_id) and not has_limit_available(user_id):
         bot.answer_callback_query(
             callback_query_id=query.id,
             text='❌ Você atingiu o limite de criação de usuários',
+            show_alert=True,
         )
         return
 
@@ -204,7 +175,7 @@ def proccess_expiration_date(message: types.Message, username: str, password: st
 @permission_required([AdminPermission(), DealerPermission()])
 def create_user(message: types.Message):
     user_id = message.from_user.id
-    if isDealer(user_id) and not has_limit_available(user_id):
+    if is_dealer(user_id) and not has_limit_available(user_id):
         bot.send_message(
             chat_id=message.chat.id,
             text='❌ Você atingiu o limite de criação de usuários',

@@ -8,26 +8,7 @@ from .. import bot
 from ..utilities.utils import callback_query_back_menu
 from ..middleware import AdminPermission, DealerPermission, permission_required
 
-from ..dealer import DealerRepository, DealerUseCase, AccountRepository, AccountUseCase
-
-
-def isDealer(user_id: int) -> bool:
-    dealer_use_case = DealerUseCase(DealerRepository())
-    return dealer_use_case.get_by_id(user_id) is not None
-
-
-def get_all_users_of_dealer(user_id: int, user_use_case: UserUseCase) -> list:
-    account_use_case = AccountUseCase(AccountRepository())
-    accounts = account_use_case.get_all_by_dealer_id(user_id)
-
-    users = []
-
-    for account in accounts:
-        user = user_use_case.get_by_id(account.id)
-        if user is not None:
-            users.append(user)
-
-    return users
+from .helpers.dealer import get_all_users_of_dealer, is_dealer
 
 
 @bot.message_handler(regexp='/monitor')
@@ -36,7 +17,7 @@ def monitor(message: types.Message):
     user_use_case = UserUseCase(UserRepository())
     users = (
         user_use_case.get_all()
-        if not isDealer(message.from_user.id)
+        if not is_dealer(message.from_user.id)
         else get_all_users_of_dealer(message.from_user.id, user_use_case)
     )
 
@@ -70,7 +51,7 @@ def callback_query__monitor(query: types.CallbackQuery):
     user_use_case = UserUseCase(UserRepository())
     users = (
         user_use_case.get_all()
-        if not isDealer(query.from_user.id)
+        if not is_dealer(query.from_user.id)
         else get_all_users_of_dealer(query.from_user.id, user_use_case)
     )
 

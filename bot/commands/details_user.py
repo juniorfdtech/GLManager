@@ -10,26 +10,7 @@ from ..utilities.utils import callback_query_back, callback_query_back_menu
 from ..middleware import AdminPermission, DealerPermission, permission_required
 from .message_helper import send_message_user_not_found, send_message_users_not_found
 
-from ..dealer import DealerRepository, DealerUseCase, AccountRepository, AccountUseCase
-
-
-def isDealer(user_id: int) -> bool:
-    dealer_use_case = DealerUseCase(DealerRepository())
-    return dealer_use_case.get_by_id(user_id) is not None
-
-
-def get_all_users_of_dealer(user_id: int, user_use_case: UserUseCase) -> list:
-    account_use_case = AccountUseCase(AccountRepository())
-    accounts = account_use_case.get_all_by_dealer_id(user_id)
-
-    users = []
-
-    for account in accounts:
-        user = user_use_case.get_by_id(account.id)
-        if user is not None:
-            users.append(user)
-
-    return users
+from .helpers.dealer import find_account_by_id, get_all_users_of_dealer, is_dealer
 
 
 def create_message_details(user_dto: UserDto) -> str:
@@ -56,7 +37,7 @@ def callback_query_get_user(query: types.CallbackQuery):
     user_use_case = UserUseCase(UserRepository())
     users = (
         user_use_case.get_all()
-        if not isDealer(user_id)
+        if not is_dealer(user_id)
         else get_all_users_of_dealer(user_id, user_use_case)
     )
 
@@ -143,8 +124,7 @@ def get_user(message: types.Message):
 
     user_id = message.from_user.id
 
-    account_use_case = AccountUseCase(AccountRepository())
-    if not account_use_case.get_by_id(dealer_id=user_id, account_id=user_dto.id):
+    if not find_account_by_id(dealer_id=user_id, account_id=user_dto.id):
         send_message_user_not_found(message, reply_message_id=message.message_id)
         return
 

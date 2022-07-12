@@ -9,6 +9,8 @@ from ..dealer import AccountRepository, AccountUseCase, AccountDTO
 from ..utilities.utils import callback_query_back
 from ..middleware import permission_required, AdminPermission
 
+from ..config.bot_config import get_admin_id
+
 
 @bot.callback_query_handler(func=lambda call: call.data == 'revenue')
 @permission_required(AdminPermission())
@@ -34,8 +36,8 @@ def revenue(call: types.CallbackQuery):
 @bot.callback_query_handler(func=lambda call: call.data == 'create_revenue')
 @permission_required(AdminPermission())
 def create_revenue(call: types.CallbackQuery):
-    text = '<b>Ex: </b>@user\n'
-    text += '<b>👤Nome de usuário:</b>'
+    text = '<b>Ex: </b>@user | 1000000\n'
+    text += '<b>👤Nome de usuário ou ID:</b>'
 
     message = bot.send_message(
         chat_id=call.message.chat.id,
@@ -79,6 +81,14 @@ def process_create_revenue(message: types.Message):
         )
         return
 
+    if profile.id == get_admin_id():
+        bot.reply_to(
+            message=message,
+            text='<b>❌Você e o administrador não podem ser revendedor❌</b>',
+            reply_markup=types.InlineKeyboardMarkup([[callback_query_back('revenue')]]),
+        )
+        return
+
     text = '<b>👤Nome de usuário:</b> <code>{}</code>\n'.format(username)
     text += '<b>👤ID:</b> <code>{}</code>\n'.format(profile.id)
     text += '<b>👤Nome:</b> <code>{}</code>\n'.format(profile.first_name)
@@ -118,7 +128,7 @@ def process_create_revenue_limit(message: types.Message, profile: types.User):
 
     text = '<b>👤Nome de usuário:</b> <code>{}</code>\n'.format(profile.username)
     text += '<b>🚫Limite de criação de contas:</b> <code>{}</code>\n\n'.format(limit)
-    text += '<b>📆Data de expiração:</b>'
+    text += '<b>📆Data de expiração (Em dias):</b>'
 
     message = bot.send_message(
         chat_id=message.chat.id,

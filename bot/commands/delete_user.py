@@ -8,27 +8,7 @@ from .message_helper import send_message_user_not_found, send_message_users_not_
 from .. import bot
 from ..utilities.utils import callback_query_back_menu
 from ..middleware import AdminPermission, DealerPermission, permission_required
-
-from ..dealer import DealerRepository, DealerUseCase, AccountRepository, AccountUseCase
-
-
-def isDealer(user_id: int) -> bool:
-    dealer_use_case = DealerUseCase(DealerRepository())
-    return dealer_use_case.get_by_id(user_id) is not None
-
-
-def increment_account_creation_limit(user_id: int, account_id: int):
-    dealer_use_case = DealerUseCase(DealerRepository())
-    dealer = dealer_use_case.get_by_id(user_id)
-
-    if not dealer:
-        return
-
-    dealer.account_creation_limit += 1
-    dealer_use_case.update(dealer)
-
-    account_use_case = AccountUseCase(AccountRepository())
-    account_use_case.delete(user_id, account_id)
+from .helpers.dealer import find_account_by_id, increment_account_creation_limit, is_dealer
 
 
 def send_message_deleted(message: types.Message, username: str):
@@ -74,10 +54,7 @@ def proccess_username_delete(message: types.Message):
 
     user_id = message.from_user.id
 
-    account_use_case = AccountUseCase(AccountRepository())
-    if isDealer(user_id) and not account_use_case.get_by_id(
-        dealer_id=user_id, account_id=user_dto.id
-    ):
+    if is_dealer(user_id) and not find_account_by_id(user_id=user_id, account_id=user_dto.id):
         send_message_user_not_found(message, reply_message_id=message.message_id)
         return
 
@@ -101,10 +78,7 @@ def delete_user(message: types.Message):
 
     user_id = message.from_user.id
 
-    account_use_case = AccountUseCase(AccountRepository())
-    if isDealer(user_id) and not account_use_case.get_by_id(
-        dealer_id=user_id, account_id=user_dto.id
-    ):
+    if is_dealer(user_id) and not find_account_by_id(user_id=user_id, account_id=user_dto.id):
         send_message_user_not_found(message, reply_message_id=message.message_id)
         return
 

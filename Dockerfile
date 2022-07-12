@@ -5,9 +5,6 @@ WORKDIR /GLManager
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY ./app ./app
-COPY ./console ./console
-COPY ./scripts ./scripts
-COPY ./tests ./tests
+COPY ./ ./
 
 CMD ["python3", "-m", "app"]
