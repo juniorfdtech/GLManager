@@ -13,13 +13,11 @@ from app.modules.console import (
 from app.utilities.logger import logger
 
 
-def create_all():
-    import app.domain.entities
+from app.domain.entities import *
+from app.data.config import Base, DBConnection
 
-    from app.data.config import Base, DBConnection
-
-    with DBConnection() as db:
-        Base.metadata.create_all(db.engine)
+with DBConnection() as db:
+    Base.metadata.create_all(db.engine)
 
 
 def connection_choices():
@@ -33,13 +31,11 @@ def connection_choices():
     console.show()
 
 
-def main():
-    create_all()
+def main_cli():
+    user_cli_main(sys.argv[1:])
 
-    if len(sys.argv) > 1:
-        user_cli_main(sys.argv[1:])
-        return
 
+def main_console():
     console = Console('GERENCIADOR')
     console.append_item(FuncItem('GERENCIADOR DE USUÁRIOS', user_console_main))
     console.append_item(FuncItem('GERENCIADOR DE CONEXÕES', connection_choices))
@@ -52,6 +48,13 @@ def main():
         pass
     finally:
         logger.info('Até mais!')
+
+
+def main():
+    if len(sys.argv) > 1:
+        main_cli()
+    else:
+        main_console()
 
 
 if __name__ == '__main__':

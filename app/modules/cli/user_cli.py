@@ -197,6 +197,10 @@ def show_all_users() -> None:
 
 
 def main(args: t.List[str]) -> None:
+    if not args:
+        parser.print_help()
+        return
+
     args = parser.parse_args(args)
 
     if args.create:

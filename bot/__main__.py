@@ -1,6 +1,9 @@
 import argparse
+import importlib
 
-from bot.bot_config import set_admin_id, set_bot_token, get_admin_id, get_bot_token
+from .config import set_admin_id, set_bot_token, get_admin_id, get_bot_token
+from .utilities.daemon import Daemon
+from .commands import ALL_MODULES
 
 parser = argparse.ArgumentParser(description='Helper for the bot')
 parser.add_argument(
@@ -51,8 +54,10 @@ args = parser.parse_args()
 
 
 def execute():
-    import bot.commands
-    from bot.bot import bot
+    from . import bot
+
+    for module in ALL_MODULES:
+        importlib.import_module('.commands.' + module, 'bot')
 
     bot.infinity_polling()
 
@@ -85,7 +90,6 @@ def main():
 
     if args.start:
         if args.daemon:
-            from .daemon import Daemon
 
             class BotDaemon(Daemon):
                 def __init__(self):
@@ -101,7 +105,7 @@ def main():
         execute()
 
     if args.stop:
-        from .daemon import Daemon
+        from .utilities.daemon import Daemon
 
         daemon = Daemon(pidfile=args.pidfile)
         daemon.stop()

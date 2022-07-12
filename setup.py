@@ -31,8 +31,9 @@ setup(
     install_requires=REQUIREMENTS,
     entry_points={
         'console_scripts': [
-            'vps = app.__main__:main',
-            'bot = bot.__main__:main',
+            'vps     = app.__main__:main_console',
+            'vps-cli = app.__main__:main_cli',
+            'bot     = bot.__main__:main',
         ],
     },
 )
