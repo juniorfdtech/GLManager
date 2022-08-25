@@ -18,50 +18,18 @@ resource.setrlimit(resource.RLIMIT_NOFILE, (65536, 65536))
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_RESPONSE = b'HTTP/1.1 101 Connection Established\r\n\r\n'
+DEFAULT_RESPONSE = b'\r\n'.join(
+    [
+        b'HTTP/1.1 101 @DuTra01',
+        b'\r\n',
+    ]
+)
+
 REMOTES_ADDRESS = {
     'ssh': ('0.0.0.0', 22),
     'openvpn': ('0.0.0.0.0', 1194),
     'v2ray': ('0.0.0.0', 1080),
 }
-
-
-class Counter:
-    def __init__(self):
-        self.__count = 0
-
-    def increment(self):
-        self.__count += 1
-
-    def decrement(self):
-        self.__count -= 1
-
-    @property
-    def count(self):
-        return self.__count
-
-
-class ConnectionCounter:
-    __counter = Counter()
-    __lock = threading.Lock()
-
-    @classmethod
-    def increment(cls):
-        with cls.__lock:
-            cls.__counter.increment()
-
-    @classmethod
-    def decrement(cls):
-        with cls.__lock:
-            cls.__counter.decrement()
-
-    @classmethod
-    def count(cls):
-        with cls.__lock:
-            return cls.__counter.count
-
-
-connection_counter = ConnectionCounter()
 
 
 class RemoteTypes(Enum):
@@ -71,25 +39,21 @@ class RemoteTypes(Enum):
 
 
 class ParserType:
-    def __init__(self, data: bytes) -> None:
-        if not isinstance(data, bytes):
-            raise TypeError('data must be bytes')
-
-        self.data = data
+    def __init__(self) -> None:
         self.type = None
         self.address = None
 
-    def parse(self) -> None:
-        if self.data.startswith(b'\x0068'):
+    def parse(self, data: bytes) -> None:
+        if data.startswith(b'\x0068'):
             self.type = RemoteTypes.OPENVPN
             self.address = REMOTES_ADDRESS[self.type.value]
             return
 
-        if self.data.startswith(b'\x00'):
+        if data.startswith(b'\x00'):
             self.type = RemoteTypes.V2RAY
             self.address = REMOTES_ADDRESS[self.type.value]
 
-        if self.data.startswith(b'SSH-'):
+        if data.startswith(b'SSH-'):
             self.type = RemoteTypes.SSH
             self.address = REMOTES_ADDRESS[self.type.value]
 
@@ -102,26 +66,25 @@ class HttpParser:
         self.headers = {}
 
     def parse(self, data: bytes) -> None:
-        data = data.decode('utf-8')
-        lines = data.split('\r\n')
+        lines = data.split(b'\r\n')
 
         self.method, self.url, self.version = lines[0].split()
         self.url = urlparse(self.url)
 
         self.headers.update(
-            {k: v.strip() for k, v in [line.split(':', 1) for line in lines[1:] if ':' in line]}
+            {k: v.strip() for k, v in [line.split(b':', 1) for line in lines[1:] if b':' in line]}
         )
 
         self.body = (
-            '\r\n'.join(lines[-1:])
-            if not self.headers.get('Content-Length')
-            else '\r\n'.join(lines[-1 : -1 * int(self.headers['Content-Length'])])
+            b'\r\n'.join(lines[:-1])
+            if not self.headers.get(b'Content-Length')
+            else b'\r\n'.join(lines[-1 : -1 * int(self.headers[b'Content-Length'])])
         )
 
     def build(self) -> bytes:
-        base = f'{self.method} {self.url.path} {self.version}\r\n'
-        headers = '\r\n'.join(f'{k}: {v}' for k, v in self.headers.items()) + '\r\n' * 2
-        return base.encode('utf-8') + headers.encode('utf-8') + self.body.encode('utf-8')
+        base = b'%s %s %s\r\n' % (self.method, self.url.path, self.version)
+        headers = '\r\n'.join('%s: %s' % (k, v) for k, v in self.headers.items()) + '\r\n' * 2
+        return base + headers.encode('utf-8') + self.body
 
 
 class Connection:
@@ -210,12 +173,12 @@ class Connection:
 
 class Client(Connection):
     def __str__(self):
-        return f'Cliente - {self.addr[0]}:{self.addr[1]}'
+        return 'Cliente - %s:%s' % self.addr
 
 
 class Server(Connection):
     def __str__(self):
-        return f'Servidor - {self.addr[0]}:{self.addr[1]}'
+        return 'Servidor - %s:%s' % self.addr
 
     @classmethod
     def of(cls, addr: Tuple[str, int]) -> 'Server':
@@ -226,7 +189,7 @@ class Server(Connection):
         self.conn = socket.create_connection(self.addr, timeout)
         self.conn.settimeout(None)
 
-        logger.debug(f'{self} Conexão estabelecida')
+        logger.debug('%s Conexão estabelecida' % self)
 
 
 class Proxy(threading.Thread):
@@ -237,7 +200,7 @@ class Proxy(threading.Thread):
         self.server = server
 
         self.http_parser = HttpParser()
-        self.parser_type = ParserType(bytes())
+        self.parser_type = ParserType()
 
         self.__running = False
 
@@ -256,25 +219,21 @@ class Proxy(threading.Thread):
             self.server.queue(data)
             return
 
-        self.parser_type.data = data
-        if self.parser_type.type is None:
-            self.parser_type.parse()
-
-        host, port = (None, None)
-        if self.parser_type.type is not None:
-            host, port = self.parser_type.address
+        self.parser_type.parse(data)
+        host, port = None, None if self.parser_type.type is None else self.parser_type.address
 
         if self.parser_type.type is None:
             self.http_parser.parse(data)
 
-            if self.http_parser.method == 'CONNECT':
-                host, port = self.http_parser.url.path.split(':')
-
+            if self.http_parser.method == b'CONNECT':
+                host, port = tuple(map(bytes.decode, self.http_parser.url.path.split(b':')))
+            else:
+                host, port = REMOTES_ADDRESS['ssh']
         if host is not None and port is not None:
             self.server = Server.of((host, int(port)))
             self.server.connect()
 
-        if self.http_parser.method == 'CONNECT' or self.parser_type.type is None:
+        if self.http_parser.method == b'CONNECT' or self.parser_type.type is None:
             self.client.queue(DEFAULT_RESPONSE)
         elif self.parser_type.type is not None and self.server and not self.server.closed:
             self.server.queue(data)
@@ -283,10 +242,10 @@ class Proxy(threading.Thread):
 
         if self.parser_type.type:
             logger.info(
-                f'{self.client} -> Modo {self.parser_type.type.value.upper()} - {host}:{port}'
+                '%s -> Modo %s - %s:%s' % (self.client, self.parser_type.type.value, host, port)
             )
         else:
-            logger.info(f'{self.client} -> Solicitação: {self.http_parser.build()}')
+            logger.info('%s -> Solicitação: %s' % (self.client, self.http_parser.body))
 
     def _get_waitable_lists(self) -> Tuple[List[socket.socket]]:
         r, w, e = [self.client.conn], [], []
@@ -305,11 +264,11 @@ class Proxy(threading.Thread):
     def _process_wlist(self, wlist: List[socket.socket]) -> None:
         if self.client.conn in wlist:
             sent = self.client.flush()
-            logger.debug(f'{self.client} enviou {sent} Bytes')
+            logger.debug('%s -> enviado %s bytes' % (self.client, sent))
 
         if self.server and not self.server.closed and self.server.conn in wlist:
             sent = self.server.flush()
-            logger.debug(f'{self.server} enviou {sent} Bytes')
+            logger.debug('%s -> enviado %s bytes' % (self.server, sent))
 
     def _process_rlist(self, rlist: List[socket.socket]) -> None:
         if self.client.conn in rlist:
@@ -317,14 +276,14 @@ class Proxy(threading.Thread):
             self.running = data is not None
             if data and self.running:
                 self._process_request(data)
-                logger.debug(f'{self.client} recebeu {len(data)} Bytes')
+                logger.debug('%s -> recebido %s bytes' % (self.client, len(data)))
 
         if self.server and not self.server.closed and self.server.conn in rlist:
             data = self.server.read()
             self.running = data is not None
             if data and self.running:
                 self.client.queue(data)
-                logger.debug(f'{self.server} recebeu {len(data)} Bytes')
+                logger.debug('%s -> recebido %s bytes' % (self.server, len(data)))
 
     def _process(self) -> None:
         self.running = True
@@ -338,16 +297,16 @@ class Proxy(threading.Thread):
 
     def run(self) -> None:
         try:
-            logger.info(f'{self.client} Conectado')
+            logger.info('%s conectado' % self.client)
             self._process()
         except Exception as e:
-            logger.exception(f'{self.client} Erro: {e}')
+            logger.exception('%s Erro: %s' % (self.client, e))
         finally:
             self.client.close()
             if self.server and not self.server.closed:
                 self.server.close()
 
-            logger.info(f'{self.client} Desconectado')
+            logger.info('%s desconectado' % self.client)
 
 
 class TCP:
@@ -358,6 +317,9 @@ class TCP:
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
+    def __str__(self) -> str:
+        return '%s - %s:%s' % (self.__class__.__name__, *self.__addr)
+
     def handle(self, conn: socket.socket, addr: Tuple[str, int]) -> None:
         raise NotImplementedError()
 
@@ -365,7 +327,7 @@ class TCP:
         self.__sock.bind(self.__addr)
         self.__sock.listen(self.__backlog)
 
-        logger.info(f'Servidor iniciado em {self.__addr[0]}:{self.__addr[1]}')
+        logger.info('Servidor %s iniciado' % self)
 
         try:
             while True:
@@ -389,7 +351,6 @@ class HTTP(TCP):
 class HTTPS(TCP):
     def __init__(self, addr: Tuple[str, int], cert: str, backlog: int = 5) -> None:
         super().__init__(addr, backlog)
-
         self.__cert = cert
 
     def handle_thread(self, conn: socket.socket, addr: Tuple[str, int]) -> None:
@@ -416,7 +377,7 @@ def main():
     parser = argparse.ArgumentParser(description='Proxy', usage='%(prog)s [options]')
 
     parser.add_argument('--host', default='0.0.0.0', help='Host')
-    parser.add_argument('--port', type=int, default=8080, help='Port')
+    parser.add_argument('--port', type=int, default=80, help='Port')
     parser.add_argument('--backlog', type=int, default=5, help='Backlog')
     parser.add_argument('--openvpn-port', type=int, default=1194, help='OpenVPN Port')
     parser.add_argument('--ssh-port', type=int, default=22, help='SSH Port')
@@ -436,24 +397,21 @@ def main():
     REMOTES_ADDRESS['ssh'] = (args.host, args.ssh_port)
     REMOTES_ADDRESS['v2ray'] = (args.host, args.v2ray_port)
 
-    server = None
-
     if args.http:
         server = HTTP((args.host, args.port), args.backlog)
 
-    if args.https:
+    elif args.https:
         if not os.path.exists(args.cert):
-            raise FileNotFoundError(f'Certicado {args.cert} não encontrado')
+            parser.error('Certificate %s not found' % args.cert)
 
         server = HTTPS((args.host, args.port), args.cert, args.backlog)
-
-    if server is None:
-        parser.print_help()
-        return
+    else:
+        server = HTTP((args.host, args.port), args.backlog)
 
     logging.basicConfig(
         level=getattr(logging, args.log.upper()),
         format='[%(asctime)s] %(levelname)s: %(message)s',
+        datefmt='%H:%M:%S',
     )
 
     server.run()

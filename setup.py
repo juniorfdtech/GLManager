@@ -4,7 +4,13 @@ from app.version import __version__
 
 
 PACKAGES = find_packages() + ['scripts']
-REQUIREMENTS = open('requirements.txt').read().splitlines()
+REQUIREMENTS = [
+    'sqlalchemy',
+    'pytest',
+    'distro',
+    'pytelegrambotapi==4.6.0',
+    'python-daemon',
+]
 VERSION = __version__
 
 DESCRIPTION = open('README.md').read()
@@ -19,7 +25,8 @@ PACKAGE_DATA = {'scripts': ['*']}
 setup(
     name='GLManager',
     version=VERSION,
-    description=DESCRIPTION,
+    long_description=DESCRIPTION,
+    long_description_content_type='text/markdown',
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     url=URL,
@@ -33,7 +40,7 @@ setup(
         'console_scripts': [
             'vps     = app.__main__:main_console',
             'vps-cli = app.__main__:main_cli',
-            'bot     = bot.__main__:main',
+            'vps-bot = bot.__main__:main',
         ],
     },
 )
