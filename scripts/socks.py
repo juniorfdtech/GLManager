@@ -12,7 +12,7 @@ from typing import List, Tuple, Union, Optional
 from enum import Enum
 
 __author__ = 'Glemison C. Dutra'
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 resource.setrlimit(resource.RLIMIT_NOFILE, (65536, 65536))
 
@@ -220,7 +220,7 @@ class Proxy(threading.Thread):
             return
 
         self.parser_type.parse(data)
-        host, port = None, None if self.parser_type.type is None else self.parser_type.address
+        host, port = (None, None) if self.parser_type.type is None else self.parser_type.address
 
         if self.parser_type.type is None:
             self.http_parser.parse(data)
@@ -229,6 +229,7 @@ class Proxy(threading.Thread):
                 host, port = tuple(map(bytes.decode, self.http_parser.url.path.split(b':')))
             else:
                 host, port = REMOTES_ADDRESS['ssh']
+
         if host is not None and port is not None:
             self.server = Server.of((host, int(port)))
             self.server.connect()
@@ -242,7 +243,8 @@ class Proxy(threading.Thread):
 
         if self.parser_type.type:
             logger.info(
-                '%s -> Modo %s - %s:%s' % (self.client, self.parser_type.type.value, host, port)
+                '%s -> Modo %s - %s:%s'
+                % (self.client, self.parser_type.type.value.upper(), host, port)
             )
         else:
             logger.info('%s -> Solicitação: %s' % (self.client, self.http_parser.body))
