@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_RESPONSE = b'\r\n'.join(
     [
-        b'HTTP/1.1 101 @DuTra01',
+        b'HTTP/1.1 101 @TwoSSH',
         b'\r\n',
     ]
 )
