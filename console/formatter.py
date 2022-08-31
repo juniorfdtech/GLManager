@@ -92,7 +92,7 @@ SYSTEM = linux_distribution()
 
 BANNER = create_menu_bg('GLTUNNEL MANAGER v' + get_app_version()) + '\n'
 BANNER += set_color('OS: ', COLOR_NAME.RED) + set_color(SYSTEM, COLOR_NAME.GREEN).ljust(31)
-BANNER += set_color('BY: ', COLOR_NAME.RED) + set_color('@Dutra01', COLOR_NAME.GREEN).ljust(27)
+BANNER += set_color('BY: ', COLOR_NAME.RED) + set_color('@TwoSSH', COLOR_NAME.GREEN).ljust(27)
 BANNER += (
     set_color('HORA: ', COLOR_NAME.RED)
     + set_color(time.strftime('%H:%M:%S'), COLOR_NAME.GREEN)
