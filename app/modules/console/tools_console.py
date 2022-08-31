@@ -15,9 +15,9 @@ from app.version import __version__
 
 class GLUpdate:
     def __init__(self):
-        self.repository_url = 'https://github.com/DuTra01/GLManager.git'
+        self.repository_url = 'https://github.com/juniorfdtech/GLManager.git'
         self.version_url = (
-            'https://raw.githubusercontent.com/DuTra01/GLManager/master/app/version.py'
+            'https://raw.githubusercontent.com/juniorfdtech/GLManager/master/app/version.py'
         )
 
     def check_update(self) -> bool:
